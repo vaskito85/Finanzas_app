@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2ECC71;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#27AE60;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Fondo circular -->
+  <circle cx="256" cy="256" r="230" fill="url(#grad)" />
+
+  <!-- Gráfico de barras -->
+  <rect x="150" y="260" width="40" height="110" rx="8" fill="#ECF0F1" />
+  <rect x="220" y="220" width="40" height="150" rx="8" fill="#ECF0F1" />
+  <rect x="290" y="180" width="40" height="190" rx="8" fill="#ECF0F1" />
+
+  <!-- Check de validación -->
+  <path d="M210 250 L240 280 L300 210" stroke="#ECF0F1" stroke-width="18" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Símbolo de moneda estilizado -->
+  <text x="256" y="150" text-anchor="middle" font-family="Segoe UI, system-ui, -apple-system" font-size="72" fill="#ECF0F1">$</text>
+</svg>

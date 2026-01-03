@@ -1,0 +1,37 @@
+/* Ajustes generales */
+body, .stApp {
+    margin: 0;
+    padding: 0;
+}
+
+/* Evitar scroll horizontal */
+html, body {
+    overflow-x: hidden;
+}
+
+/* Métricas más grandes en móvil */
+@media (max-width: 600px) {
+    .stMetric {
+        text-align: center !important;
+        font-size: 1.2rem !important;
+    }
+}
+
+/* Tablas responsivas */
+.dataframe {
+    width: 100% !important;
+    overflow-x: auto !important;
+}
+
+/* Botones más grandes */
+.stButton>button {
+    padding: 0.8rem 1.2rem;
+    font-size: 1.1rem;
+}
+
+/* Inputs más cómodos */
+.stTextInput>div>div>input,
+.stNumberInput>div>div>input {
+    font-size: 1.1rem;
+    padding: 0.6rem;
+}

@@ -1,0 +1,27 @@
+# Entorno virtual
+venv/
+env/
+.venv/
+
+# Archivos de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de Streamlit
+.streamlit/
+
+# Base de datos local (se genera en el servidor)
+finanzas.db
+
+# Archivos de configuración locales
+objetivos.json
+
+# Archivos temporales
+*.tmp
+*.log
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
