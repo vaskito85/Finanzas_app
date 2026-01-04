@@ -1,0 +1,43 @@
+import streamlit as st
+import pandas as pd
+
+from auth import check_auth
+from ui import topbar, top_menu
+from models import listar_movimientos_borrados
+from db import restaurar_movimiento
+
+
+def main():
+    check_auth()
+    topbar()
+    top_menu()
+
+    usuario = st.session_state.get("user")
+    usuario_id = usuario["id"]
+
+    st.title("♻️ Restaurar Movimiento")
+
+    movimientos = listar_movimientos_borrados(usuario_id)
+
+    if not movimientos:
+        st.info("No hay movimientos borrados para restaurar.")
+        return
+
+    df = pd.DataFrame([m.__dict__ for m in movimientos])
+
+    st.subheader("Movimientos borrados")
+    st.dataframe(df[["id", "fecha", "categoria", "tipo", "descripcion", "monto", "cuenta"]])
+
+    ids = df["id"].tolist()
+    id_sel = st.selectbox("Seleccionar ID a restaurar", ids)
+
+    if st.button("Restaurar seleccionado"):
+        if restaurar_movimiento(usuario_id, id_sel):
+            st.success("Movimiento restaurado correctamente.")
+            st.rerun()
+        else:
+            st.error("Error al restaurar movimiento.")
+
+
+if __name__ == "__main__":
+    main()

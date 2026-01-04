@@ -1,5 +1,3 @@
-# auth.py
-
 import streamlit as st
 from supabase_client import get_supabase_client
 

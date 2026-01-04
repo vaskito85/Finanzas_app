@@ -1,57 +1,53 @@
-# app.py
-
 import streamlit as st
 from auth import check_auth
-from ui import top_menu
+from ui import topbar, top_menu
 
-# ?? set_page_config SIEMPRE debe ir antes de cualquier output
 st.set_page_config(
     page_title="Finanzas Personales",
-    page_icon="??",
+    page_icon="馃捀",
     layout="wide"
 )
 
+# Cargar estilos ANTES de dibujar UI
+try:
+    with open("styles.css", "r", encoding="utf-8") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+except:
+    pass
+
 
 def main():
-    # Seguridad: si no hay usuario, muestra login/registro
     check_auth()
 
-    # Menú superior (solo visible si hay usuario)
+    topbar()
     top_menu()
 
-    # Cargar estilos personalizados
-    try:
-        with open("styles.css", "r", encoding="utf-8") as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-    except:
-        pass
-
-    st.title("?? Finanzas Personales")
-    st.write("Usá el menú de la izquierda para navegar entre las secciones.")
+    st.title("馃捀 Finanzas Personales")
+    st.write("Us谩 el men煤 de la izquierda para navegar entre las secciones.")
 
     st.markdown(
         """
-        ## ?? Secciones disponibles
+        ## 馃搶 Secciones disponibles
 
-        ### ?? Análisis y Reportes
+        ### 馃搳 An谩lisis y Reportes
         - **Resumen General**
         - **Movimientos**
         - **Balance por Cuenta**
         - **Dashboard Mensual**
         - **Dashboard Anual**
-        - **Comparación Mes a Mes**
-        - **Proyección Financiera (Forecast)**
+        - **Comparaci贸n Mes a Mes**
+        - **Proyecci贸n Financiera (Forecast)**
 
-        ### ?? Gestión y Control
+        ### 馃Л Gesti贸n y Control
         - **Cargar Movimiento**
         - **Importar CSV**
         - **Objetivos Financieros**
-        - **Alertas Automáticas**
+        - **Alertas Autom谩ticas**
 
-        ### ?? Sistema
+        ### 馃洜 Sistema
         - Multiusuario
         - Etiquetas manuales + sugeridas
-        - Modo móvil optimizado
+        - Modo m贸vil optimizado
         """
     )
 

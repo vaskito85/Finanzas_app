@@ -1,27 +1,47 @@
-# Entorno virtual
+# ----------------------------------------
+# ENTORNOS VIRTUALES
+# ----------------------------------------
 venv/
 env/
 .venv/
 
-# Archivos de Python
+# ----------------------------------------
+# PYTHON CACHE
+# ----------------------------------------
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# Archivos de Streamlit
+# ----------------------------------------
+# STREAMLIT
+# ----------------------------------------
 .streamlit/
 
-# Base de datos local (se genera en el servidor)
+# ----------------------------------------
+# ARCHIVOS DE CONFIGURACIÓN / SECRETS
+# ----------------------------------------
+.env
+.env.local
+.env.*
+supabase_keys.json
+
+# ----------------------------------------
+# ARCHIVOS GENERADOS POR LA APP
+# ----------------------------------------
 finanzas.db
-
-# Archivos de configuración locales
-objetivos.json
-
-# Archivos temporales
+objetivos/
 *.tmp
 *.log
+logs/
 
-# Archivos del sistema
+# ----------------------------------------
+# SISTEMA
+# ----------------------------------------
 .DS_Store
 Thumbs.db
+
+# ----------------------------------------
+# OTROS
+# ----------------------------------------
+.cache/

@@ -4,7 +4,7 @@ import altair as alt
 
 from models import listar_movimientos
 from auth import check_auth
-from ui import top_menu
+from ui import topbar, top_menu
 
 
 def formato_argentino(valor):
@@ -14,6 +14,9 @@ def formato_argentino(valor):
 def main():
     # Seguridad
     check_auth()
+
+    # Barra fija + menú superior
+    topbar()
     top_menu()
 
     usuario_id = st.session_state["user"]["id"]

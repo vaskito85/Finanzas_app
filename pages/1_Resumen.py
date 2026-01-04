@@ -3,9 +3,7 @@ import pandas as pd
 
 from models import listar_movimientos
 from auth import check_auth
-from db import init_db
-from ui import top_menu
-
+from ui import topbar, top_menu
 
 
 def formato_argentino(valor):
@@ -14,8 +12,10 @@ def formato_argentino(valor):
 
 def main():
     check_auth()
+
+    # Barra fija + menú superior
+    topbar()
     top_menu()
-    init_db()
 
     usuario_id = st.session_state["user"]["id"]
 

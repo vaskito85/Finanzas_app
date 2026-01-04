@@ -1,8 +1,7 @@
-# models.py
-
 from dataclasses import dataclass
-from typing import List
-from db import obtener_movimientos
+from typing import List, Any
+from db import obtener_movimientos, obtener_movimientos_borrados
+import json
 
 
 @dataclass
@@ -15,24 +14,68 @@ class Movimiento:
     monto: float
     cuenta: str
     etiquetas: list
+    created_at: str | None
+    deleted: bool
+
+
+def _parse_etiquetas(raw: Any) -> list:
+    if raw is None:
+        return []
+
+    if isinstance(raw, list):
+        return raw
+
+    if isinstance(raw, str):
+        try:
+            data = json.loads(raw)
+            return data if isinstance(data, list) else []
+        except Exception:
+            return []
+
+    return []
 
 
 def listar_movimientos(usuario_id: str) -> List[Movimiento]:
-    """
-    Convierte los registros crudos de Supabase en objetos Movimiento.
-    """
     rows = obtener_movimientos(usuario_id)
+    movimientos: List[Movimiento] = []
 
-    return [
-        Movimiento(
-            id=row["id"],
-            fecha=row["fecha"],
-            categoria=row["categoria"],
-            tipo=row["tipo"],
-            descripcion=row["descripcion"],
-            monto=row["monto"],
-            cuenta=row["cuenta"],
-            etiquetas=row.get("etiquetas") or [],
+    for row in rows:
+        movimientos.append(
+            Movimiento(
+                id=row.get("id"),
+                fecha=row.get("fecha") or "",
+                categoria=row.get("categoria") or "Sin categoría",
+                tipo=row.get("tipo") or "",
+                descripcion=row.get("descripcion") or "",
+                monto=float(row.get("monto") or 0),
+                cuenta=row.get("cuenta") or "Sin cuenta",
+                etiquetas=_parse_etiquetas(row.get("etiquetas")),
+                created_at=row.get("created_at"),
+                deleted=bool(row.get("deleted", False)),
+            )
         )
-        for row in rows
-    ]
+
+    return movimientos
+
+
+def listar_movimientos_borrados(usuario_id: str) -> List[Movimiento]:
+    rows = obtener_movimientos_borrados(usuario_id)
+    movimientos: List[Movimiento] = []
+
+    for row in rows:
+        movimientos.append(
+            Movimiento(
+                id=row.get("id"),
+                fecha=row.get("fecha") or "",
+                categoria=row.get("categoria") or "Sin categoría",
+                tipo=row.get("tipo") or "",
+                descripcion=row.get("descripcion") or "",
+                monto=float(row.get("monto") or 0),
+                cuenta=row.get("cuenta") or "Sin cuenta",
+                etiquetas=_parse_etiquetas(row.get("etiquetas")),
+                created_at=row.get("created_at"),
+                deleted=bool(row.get("deleted", True)),
+            )
+        )
+
+    return movimientos
