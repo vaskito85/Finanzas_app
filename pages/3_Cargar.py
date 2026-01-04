@@ -11,8 +11,12 @@ def main():
     topbar()
     top_menu()
 
-    usuario = st.session_state.get("user")
-    usuario_id = usuario["id"]
+    # Validación segura del usuario
+    if "user" not in st.session_state:
+        st.error("No hay usuario autenticado.")
+        st.stop()
+
+    usuario_id = st.session_state["user"]["id"]
 
     st.title("➕ Cargar Movimiento")
 
@@ -47,3 +51,7 @@ def main():
             st.rerun()
         else:
             st.error("Error al guardar el movimiento.")
+
+
+if __name__ == "__main__":
+    main()

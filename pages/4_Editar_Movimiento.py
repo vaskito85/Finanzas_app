@@ -1,5 +1,6 @@
 import streamlit as st
 import json
+import pandas as pd
 
 from auth import check_auth
 from ui import topbar, top_menu
@@ -11,8 +12,12 @@ def main():
     topbar()
     top_menu()
 
-    usuario = st.session_state.get("user")
-    usuario_id = usuario["id"]
+    # Validación segura del usuario
+    if "user" not in st.session_state:
+        st.error("No hay usuario autenticado.")
+        st.stop()
+
+    usuario_id = st.session_state["user"]["id"]
 
     st.title("✏️ Editar Movimiento")
 
@@ -30,6 +35,7 @@ def main():
         st.error("No se encontró el movimiento seleccionado.")
         return
 
+    # Procesar etiquetas
     etiquetas_raw = mov.get("etiquetas") or []
     if isinstance(etiquetas_raw, list):
         etiquetas_str = ", ".join(etiquetas_raw)
@@ -40,14 +46,14 @@ def main():
         except Exception:
             etiquetas_str = ""
 
-    with st.form("form_editar"):
-        fecha = st.date_input("Fecha", value=st.date_input("Fecha", value=None) if not mov.get("fecha") else None)
-        if mov.get("fecha"):
-            try:
-                fecha = st.date_input("Fecha", value=mov["fecha"])
-            except Exception:
-                fecha = st.date_input("Fecha")
+    # Procesar fecha
+    try:
+        fecha_valor = pd.to_datetime(mov.get("fecha")).date()
+    except Exception:
+        fecha_valor = None
 
+    with st.form("form_editar"):
+        fecha = st.date_input("Fecha", value=fecha_valor)
         categoria = st.text_input("Categoría", value=mov.get("categoria") or "")
         tipo = st.selectbox("Tipo", ["ingreso", "gasto"], index=0 if mov.get("tipo") == "ingreso" else 1)
         descripcion = st.text_input("Descripción", value=mov.get("descripcion") or "")
@@ -78,3 +84,7 @@ def main():
             st.rerun()
         else:
             st.error("Error al actualizar el movimiento.")
+
+
+if __name__ == "__main__":
+    main()
