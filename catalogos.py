@@ -45,31 +45,70 @@ CUENTAS_SUGERIDAS = [
 ]
 
 
+# -------------------------------------------------------------------
+#   CARGA INICIAL — SOLO SI LA TABLA ESTÁ VACÍA
+# -------------------------------------------------------------------
 def _ensure_defaults(usuario_id: str):
     supabase = get_supabase_client()
 
-    # Categorías
-    for nombre in CATEGORIAS_SUGERIDAS:
-        supabase.table("categorias").upsert(
-            {"usuario_id": usuario_id, "nombre": nombre},
-            on_conflict="usuario_id,nombre"
-        ).execute()
+    # CATEGORÍAS
+    try:
+        existing = (
+            supabase.table("categorias")
+            .select("id")
+            .eq("usuario_id", usuario_id)
+            .limit(1)
+            .execute()
+        )
+        if not existing.data:
+            for nombre in CATEGORIAS_SUGERIDAS:
+                supabase.table("categorias").insert({
+                    "usuario_id": usuario_id,
+                    "nombre": nombre
+                }).execute()
+    except Exception as e:
+        print("Error cargando categorías:", e)
 
-    # Etiquetas
-    for nombre in ETIQUETAS_SUGERIDAS:
-        supabase.table("etiquetas").upsert(
-            {"usuario_id": usuario_id, "nombre": nombre},
-            on_conflict="usuario_id,nombre"
-        ).execute()
+    # ETIQUETAS
+    try:
+        existing = (
+            supabase.table("etiquetas")
+            .select("id")
+            .eq("usuario_id", usuario_id)
+            .limit(1)
+            .execute()
+        )
+        if not existing.data:
+            for nombre in ETIQUETAS_SUGERIDAS:
+                supabase.table("etiquetas").insert({
+                    "usuario_id": usuario_id,
+                    "nombre": nombre
+                }).execute()
+    except Exception as e:
+        print("Error cargando etiquetas:", e)
 
-    # Cuentas
-    for nombre in CUENTAS_SUGERIDAS:
-        supabase.table("cuentas").upsert(
-            {"usuario_id": usuario_id, "nombre": nombre},
-            on_conflict="usuario_id,nombre"
-        ).execute()
+    # CUENTAS
+    try:
+        existing = (
+            supabase.table("cuentas")
+            .select("id")
+            .eq("usuario_id", usuario_id)
+            .limit(1)
+            .execute()
+        )
+        if not existing.data:
+            for nombre in CUENTAS_SUGERIDAS:
+                supabase.table("cuentas").insert({
+                    "usuario_id": usuario_id,
+                    "nombre": nombre
+                }).execute()
+    except Exception as e:
+        print("Error cargando cuentas:", e)
 
 
+# -------------------------------------------------------------------
+#   OBTENER LISTAS
+# -------------------------------------------------------------------
 def obtener_categorias(usuario_id: str) -> List[str]:
     supabase = get_supabase_client()
     _ensure_defaults(usuario_id)
@@ -112,6 +151,9 @@ def obtener_cuentas(usuario_id: str) -> List[str]:
     return [r["nombre"] for r in (result.data or [])]
 
 
+# -------------------------------------------------------------------
+#   AGREGAR NUEVOS
+# -------------------------------------------------------------------
 def agregar_categoria(usuario_id: str, nombre: str):
     if not nombre.strip():
         return

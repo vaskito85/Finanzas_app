@@ -21,14 +21,17 @@ def main():
 
     st.title("📄 Movimientos")
 
+    # Obtener movimientos del usuario
     movimientos = listar_movimientos(usuario_id)
 
     if not movimientos:
         st.info("Todavía no hay movimientos cargados.")
         return
 
+    # Convertir a DataFrame
     df = pd.DataFrame([m.__dict__ for m in movimientos])
 
+    # Obtener catálogos desde Supabase
     cuentas = obtener_cuentas(usuario_id)
     categorias = obtener_categorias(usuario_id)
 
@@ -45,6 +48,7 @@ def main():
     with col4:
         categoria_filtro = st.selectbox("Categoría", ["Todas"] + categorias)
 
+    # Aplicar filtros
     if fecha_desde:
         df = df[df["fecha"] >= str(fecha_desde)]
     if fecha_hasta:
@@ -55,6 +59,11 @@ def main():
         df = df[df["categoria"] == categoria_filtro]
 
     st.subheader("Listado de movimientos")
+
+    if df.empty:
+        st.info("No hay movimientos que coincidan con los filtros seleccionados.")
+        return
+
     st.dataframe(df[["id", "fecha", "categoria", "tipo", "descripcion", "monto", "cuenta"]])
 
     st.subheader("🗑 Borrar movimiento (lógico)")

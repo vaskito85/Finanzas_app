@@ -27,6 +27,7 @@ def main():
 
     st.title("➕ Cargar Movimiento")
 
+    # Obtener catálogos desde Supabase (ya optimizado)
     categorias = obtener_categorias(usuario_id)
     etiquetas_sugeridas = obtener_etiquetas(usuario_id)
     cuentas = obtener_cuentas(usuario_id)
@@ -34,27 +35,34 @@ def main():
     with st.form("form_movimiento"):
         fecha = st.date_input("Fecha")
 
+        # Categoría
         categoria_sel = st.selectbox("Categoría", categorias + ["Otra..."])
         categoria_nueva = ""
         if categoria_sel == "Otra...":
             categoria_nueva = st.text_input("Nueva categoría")
         categoria_final = categoria_nueva.strip() if categoria_nueva else categoria_sel
 
+        # Tipo
         tipo = st.selectbox("Tipo", ["ingreso", "gasto"])
 
+        # Descripción y monto
         descripcion = st.text_input("Descripción")
         monto = st.number_input("Monto", min_value=0.0, step=0.01)
 
+        # Cuenta
         cuenta_sel = st.selectbox("Cuenta", cuentas + ["Otra..."])
         cuenta_nueva = ""
         if cuenta_sel == "Otra...":
             cuenta_nueva = st.text_input("Nueva cuenta")
         cuenta_final = cuenta_nueva.strip() if cuenta_nueva else cuenta_sel
 
+        # Etiquetas sugeridas
         etiquetas_multi = st.multiselect(
             "Etiquetas sugeridas",
             options=etiquetas_sugeridas,
         )
+
+        # Etiquetas adicionales
         etiquetas_extra = st.text_input(
             "Etiquetas adicionales (separadas por ;)",
             help="Ejemplo: urgente; tarjeta; online",
