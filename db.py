@@ -39,8 +39,9 @@ def insertar_movimiento(
             "deleted": False,
         }
 
-        supabase.table("movimientos").insert(data).execute()
-        return True
+        result = supabase.table("movimientos").insert(data).execute()
+
+        return result.data is not None
 
     except Exception as e:
         print(f"[DB] Error al insertar movimiento: {e}")
@@ -110,13 +111,11 @@ def obtener_movimiento_por_id(usuario_id: str, movimiento_id: int) -> Optional[D
             .select("*")
             .eq("usuario_id", usuario_id)
             .eq("id", movimiento_id)
-            .limit(1)
+            .single()
             .execute()
         )
 
-        if result.data:
-            return result.data[0]
-        return None
+        return result.data
 
     except Exception as e:
         print(f"[DB] Error al obtener movimiento por id: {e}")
@@ -158,13 +157,15 @@ def actualizar_movimiento(
             "etiquetas": etiquetas,
         }
 
-        supabase.table("movimientos") \
-            .update(data) \
-            .eq("id", movimiento_id) \
-            .eq("usuario_id", usuario_id) \
+        result = (
+            supabase.table("movimientos")
+            .update(data)
+            .eq("id", movimiento_id)
+            .eq("usuario_id", usuario_id)
             .execute()
+        )
 
-        return True
+        return result.data is not None
 
     except Exception as e:
         print(f"[DB] Error al actualizar movimiento: {e}")
@@ -179,13 +180,15 @@ def eliminar_movimiento_logico(usuario_id: str, movimiento_id: int) -> bool:
     try:
         supabase = get_supabase_client()
 
-        supabase.table("movimientos") \
-            .update({"deleted": True}) \
-            .eq("id", movimiento_id) \
-            .eq("usuario_id", usuario_id) \
+        result = (
+            supabase.table("movimientos")
+            .update({"deleted": True})
+            .eq("id", movimiento_id)
+            .eq("usuario_id", usuario_id)
             .execute()
+        )
 
-        return True
+        return result.data is not None
 
     except Exception as e:
         print(f"[DB] Error al eliminar (lógico) movimiento: {e}")
@@ -200,13 +203,15 @@ def restaurar_movimiento(usuario_id: str, movimiento_id: int) -> bool:
     try:
         supabase = get_supabase_client()
 
-        supabase.table("movimientos") \
-            .update({"deleted": False}) \
-            .eq("id", movimiento_id) \
-            .eq("usuario_id", usuario_id) \
+        result = (
+            supabase.table("movimientos")
+            .update({"deleted": False})
+            .eq("id", movimiento_id)
+            .eq("usuario_id", usuario_id)
             .execute()
+        )
 
-        return True
+        return result.data is not None
 
     except Exception as e:
         print(f"[DB] Error al restaurar movimiento: {e}")

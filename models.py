@@ -19,6 +19,7 @@ class Movimiento:
 
 
 def _parse_etiquetas(raw: Any) -> list:
+    """Convierte etiquetas en lista segura."""
     if raw is None:
         return []
 
@@ -33,6 +34,15 @@ def _parse_etiquetas(raw: Any) -> list:
             return []
 
     return []
+
+
+def _parse_deleted(value: Any) -> bool:
+    """Convierte deleted en booleano seguro."""
+    if isinstance(value, bool):
+        return value
+    if value in ("true", "True", "1", 1):
+        return True
+    return False
 
 
 def listar_movimientos(usuario_id: str) -> List[Movimiento]:
@@ -51,7 +61,7 @@ def listar_movimientos(usuario_id: str) -> List[Movimiento]:
                 cuenta=row.get("cuenta") or "Sin cuenta",
                 etiquetas=_parse_etiquetas(row.get("etiquetas")),
                 created_at=row.get("created_at"),
-                deleted=bool(row.get("deleted", False)),
+                deleted=_parse_deleted(row.get("deleted")),
             )
         )
 
@@ -74,7 +84,7 @@ def listar_movimientos_borrados(usuario_id: str) -> List[Movimiento]:
                 cuenta=row.get("cuenta") or "Sin cuenta",
                 etiquetas=_parse_etiquetas(row.get("etiquetas")),
                 created_at=row.get("created_at"),
-                deleted=bool(row.get("deleted", True)),
+                deleted=_parse_deleted(row.get("deleted")),
             )
         )
 
