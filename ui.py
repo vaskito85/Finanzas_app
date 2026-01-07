@@ -2,19 +2,6 @@ import streamlit as st
 from auth import logout_button
 
 # -------------------------------
-#   TEMA CLARO / OSCURO
-# -------------------------------
-
-def init_theme():
-    if "theme_mode" not in st.session_state:
-        st.session_state["theme_mode"] = "light"
-
-def toggle_theme():
-    st.session_state["theme_mode"] = (
-        "dark" if st.session_state["theme_mode"] == "light" else "light"
-    )
-
-# -------------------------------
 #   TOPBAR FIJA (HTML + CSS)
 # -------------------------------
 
@@ -28,104 +15,84 @@ def topbar():
     except:
         version = "v?"
 
-    # CSS robusto para barra fija + soporte claro/oscuro
-    st.markdown("""
+    # ⚠️ Cambiá esta URL por la de tu repo real
+    logo_url = "https://github.com/vaskito85/Finanzas_app/blob/main/assets/logo.svg"
+
+    st.markdown(
+        f"""
         <style>
-        /* Variables de color según tema */
-        [data-theme="light"] {
-            --topbar-bg: #ffffff;
-            --topbar-text: #000000;
-            --topbar-border: #cccccc;
-        }
-
-        [data-theme="dark"] {
-            --topbar-bg: #0E1117;
-            --topbar-text: #ffffff;
-            --topbar-border: #333333;
-        }
-
-        /* Barra fija */
-        .topbar-container {
+        .custom-topbar {{
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             height: 60px;
-            background-color: var(--topbar-bg);
-            color: var(--topbar-text);
-            border-bottom: 1px solid var(--topbar-border);
+            background-color: #0E1117;
+            color: white;
             z-index: 9999;
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 8px 20px;
             font-family: sans-serif;
-        }
+            border-bottom: 1px solid #333;
+        }}
 
-        .topbar-left {
+        .custom-topbar-left {{
             display: flex;
             align-items: center;
             gap: 12px;
-        }
+        }}
 
-        .topbar-logo {
+        .custom-topbar-logo {{
             height: 40px;
-        }
+        }}
 
-        .topbar-title {
+        .custom-topbar-title {{
             font-size: 20px;
             font-weight: bold;
-        }
+        }}
 
-        .topbar-version {
+        .custom-topbar-version {{
             font-size: 12px;
             opacity: 0.6;
             margin-left: 6px;
-        }
+        }}
 
-        .topbar-user {
+        .custom-topbar-user {{
             font-size: 14px;
             opacity: 0.9;
-        }
+        }}
 
-        /* Compensación para que el contenido no quede tapado */
-        .topbar-spacer {
+        /* Compensar el espacio de la barra para que no tape el contenido */
+        .custom-topbar-spacer {{
             margin-top: 70px;
-        }
+        }}
         </style>
-    """, unsafe_allow_html=True)
 
-    # HTML de la barra
-    st.markdown(f"""
-        <div class="topbar-container">
-            <div class="topbar-left">
-                <img src="assets/logo.svg" class="topbar-logo">
-                <div class="topbar-title">
-                    Finanzas App <span class="topbar-version">{version}</span>
+        <div class="custom-topbar">
+            <div class="custom-topbar-left">
+                <img src="{logo_url}" class="custom-topbar-logo">
+                <div class="custom-topbar-title">
+                    Finanzas App <span class="custom-topbar-version">{version}</span>
                 </div>
             </div>
-            <div class="topbar-user">👤 {email}</div>
+            <div class="custom-topbar-user">👤 {email}</div>
         </div>
-        <div class="topbar-spacer"></div>
-    """, unsafe_allow_html=True)
+        <div class="custom-topbar-spacer"></div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # -------------------------------
-#   BOTONES DE TEMA + LOGOUT
+#   BOTÓN LOGOUT ARRIBA A LA DERECHA
 # -------------------------------
 
 def top_menu():
-    init_theme()
-    mode = st.session_state["theme_mode"]
-
     col1, col2 = st.columns([9, 1])
 
     with col1:
         pass
 
     with col2:
-        label = "🌙" if mode == "light" else "☀️"
-        if st.button(label, help="Cambiar tema claro/oscuro"):
-            toggle_theme()
-            st.rerun()
-
         logout_button()
