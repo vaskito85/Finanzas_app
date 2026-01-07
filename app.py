@@ -1,6 +1,6 @@
 import streamlit as st
 from auth import check_auth
-from ui import topbar, top_menu
+from ui import topbar
 
 st.set_page_config(
     page_title="Finanzas Personales",
@@ -20,7 +20,6 @@ def main():
     check_auth()
 
     topbar()
-    top_menu()
 
     st.title("💸 Finanzas Personales")
     st.write("Usá el menú de la izquierda para navegar entre las secciones.")

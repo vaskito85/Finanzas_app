@@ -17,32 +17,20 @@ def topbar():
 
     logo_url = "https://raw.githubusercontent.com/vaskito85/Finanzas_app/main/assets/logo.svg"
 
-    # Barra superior nativa
-    col_logo, col_title, col_user = st.columns([1, 6, 3])
+    # Barra superior nativa alineada
+    col1, col2, col3, col4 = st.columns([1, 5, 3, 1])
 
-    with col_logo:
+    with col1:
         st.image(logo_url, width=40)
 
-    with col_title:
+    with col2:
         st.markdown(
-            f"### Finanzas App "
-            f"<span style='font-size:0.8em; opacity:0.6;'>({version})</span>",
+            f"### Finanzas App <span style='font-size:0.8em; opacity:0.6;'>({version})</span>",
             unsafe_allow_html=True
         )
 
-    with col_user:
+    with col3:
         st.markdown(f"**👤 {email}**")
 
-
-# -------------------------------
-#   BOTÓN LOGOUT ARRIBA A LA DERECHA
-# -------------------------------
-
-def top_menu():
-    col1, col2 = st.columns([9, 1])
-
-    with col1:
-        pass
-
-    with col2:
+    with col4:
         logout_button()
