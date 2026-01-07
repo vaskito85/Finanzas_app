@@ -2,7 +2,7 @@ import streamlit as st
 from auth import logout_button
 
 # -------------------------------
-#   TOPBAR FIJA (HTML + CSS)
+#   TOPBAR NATIVA (SIN HTML)
 # -------------------------------
 
 def topbar():
@@ -15,74 +15,24 @@ def topbar():
     except:
         version = "v?"
 
-    # URL correcta para servir imágenes desde GitHub
     logo_url = "https://raw.githubusercontent.com/vaskito85/Finanzas_app/main/assets/logo.svg"
 
-    st.markdown(
-        f"""
-        <style>
-        .custom-topbar {{
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            background-color: #0E1117;
-            color: white;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 20px;
-            font-family: sans-serif;
-            border-bottom: 1px solid #333;
-        }}
+    # Barra superior nativa
+    col_logo, col_title, col_user = st.columns([1, 6, 3])
 
-        .custom-topbar-left {{
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }}
+    with col_logo:
+        st.image(logo_url, width=40)
 
-        .custom-topbar-logo {{
-            height: 40px;
-        }}
+    with col_title:
+        st.markdown(
+            f"### Finanzas App "
+            f"<span style='font-size:0.8em; opacity:0.6;'>({version})</span>",
+            unsafe_allow_html=True
+        )
 
-        .custom-topbar-title {{
-            font-size: 20px;
-            font-weight: bold;
-        }}
+    with col_user:
+        st.markdown(f"**👤 {email}**")
 
-        .custom-topbar-version {{
-            font-size: 12px;
-            opacity: 0.6;
-            margin-left: 6px;
-        }}
-
-        .custom-topbar-user {{
-            font-size: 14px;
-            opacity: 0.9;
-        }}
-
-        /* Compensación para que el contenido no quede tapado */
-        .custom-topbar-spacer {{
-            margin-top: 70px;
-        }}
-        </style>
-
-        <div class="custom-topbar">
-            <div class="custom-topbar-left">
-                <img src="{logo_url}" class="custom-topbar-logo">
-                <div class="custom-topbar-title">
-                    Finanzas App <span class="custom-topbar-version">{version}</span>
-                </div>
-            </div>
-            <div class="custom-topbar-user">👤 {email}</div>
-        </div>
-        <div class="custom-topbar-spacer"></div>
-        """,
-        unsafe_allow_html=True,
-    )
 
 # -------------------------------
 #   BOTÓN LOGOUT ARRIBA A LA DERECHA
