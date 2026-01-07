@@ -5,7 +5,7 @@ import os
 
 from models import listar_movimientos
 from auth import check_auth
-from ui import topbar, top_menu
+from ui import topbar
 
 
 OBJ_FILE = "objetivos.json"
@@ -35,7 +35,6 @@ def main():
 
     # Barra fija + menú superior
     topbar()
-    top_menu()
 
     usuario_id = st.session_state["user"]["id"]
 

@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 from auth import check_auth
-from ui import topbar, top_menu
+from ui import topbar
 from models import listar_movimientos
 from db import eliminar_movimiento_logico
 from catalogos import obtener_cuentas, obtener_categorias
@@ -11,7 +11,6 @@ from catalogos import obtener_cuentas, obtener_categorias
 def main():
     check_auth()
     topbar()
-    top_menu()
 
     if "user" not in st.session_state:
         st.error("No hay usuario autenticado.")

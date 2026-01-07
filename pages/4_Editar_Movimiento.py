@@ -3,7 +3,7 @@ import json
 import pandas as pd
 
 from auth import check_auth
-from ui import topbar, top_menu
+from ui import topbar
 from db import obtener_movimientos, obtener_movimiento_por_id, actualizar_movimiento
 from catalogos import (
     obtener_categorias,
@@ -18,7 +18,6 @@ from catalogos import (
 def main():
     check_auth()
     topbar()
-    top_menu()
 
     if "user" not in st.session_state:
         st.error("No hay usuario autenticado.")

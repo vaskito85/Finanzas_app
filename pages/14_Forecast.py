@@ -5,7 +5,7 @@ import numpy as np
 
 from models import listar_movimientos
 from auth import check_auth
-from ui import topbar, top_menu
+from ui import topbar
 
 
 def formato_argentino(valor):
@@ -18,7 +18,6 @@ def main():
 
     # Barra fija + menú superior
     topbar()
-    top_menu()
 
     if "user" not in st.session_state or "user" not in st.session_state:
         st.error("No hay usuario autenticado.")

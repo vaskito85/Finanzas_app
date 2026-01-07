@@ -4,7 +4,7 @@ import json
 
 from db import insertar_movimiento
 from auth import check_auth
-from ui import topbar, top_menu
+from ui import topbar
 
 
 def formato_argentino_a_float(valor):
@@ -25,7 +25,6 @@ def main():
 
     # Barra fija + menú superior
     topbar()
-    top_menu()
 
     usuario_id = st.session_state["user"]["id"]
 

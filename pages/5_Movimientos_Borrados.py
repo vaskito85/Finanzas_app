@@ -2,14 +2,13 @@ import streamlit as st
 import pandas as pd
 
 from auth import check_auth
-from ui import topbar, top_menu
+from ui import topbar
 from models import listar_movimientos_borrados
 
 
 def main():
     check_auth()
     topbar()
-    top_menu()
 
     usuario = st.session_state.get("user")
     usuario_id = usuario["id"]
