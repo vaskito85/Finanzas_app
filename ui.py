@@ -15,8 +15,8 @@ def topbar():
     except:
         version = "v?"
 
-    # ⚠️ Cambiá esta URL por la de tu repo real
-    logo_url = "https://github.com/vaskito85/Finanzas_app/blob/main/assets/logo.svg"
+    # URL correcta para servir imágenes desde GitHub
+    logo_url = "https://raw.githubusercontent.com/vaskito85/Finanzas_app/main/assets/logo.svg"
 
     st.markdown(
         f"""
@@ -64,7 +64,7 @@ def topbar():
             opacity: 0.9;
         }}
 
-        /* Compensar el espacio de la barra para que no tape el contenido */
+        /* Compensación para que el contenido no quede tapado */
         .custom-topbar-spacer {{
             margin-top: 70px;
         }}
