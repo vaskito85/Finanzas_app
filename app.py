@@ -17,38 +17,53 @@ except:
 
 
 def main():
+    # Autenticación
     check_auth()
 
+    # Barra superior
     topbar()
 
-    st.title("💸 Finanzas Personales")
-    st.write("Usá el menú de la izquierda para navegar entre las secciones.")
+    # Título principal
+    st.markdown("## 💸 Finanzas Personales")
+    st.markdown("Bienvenido a tu panel de control financiero.")
 
-    st.markdown(
-        """
-        ## 📌 Secciones disponibles
+    st.markdown("---")
 
-        ### 📊 Análisis y Reportes
-        - **Resumen General**
-        - **Movimientos**
-        - **Balance por Cuenta**
-        - **Dashboard Mensual**
-        - **Dashboard Anual**
-        - **Comparación Mes a Mes**
-        - **Proyección Financiera (Forecast)**
+    # Secciones organizadas en columnas
+    col1, col2, col3 = st.columns(3)
 
-        ### 🧭 Gestión y Control
-        - **Cargar Movimiento**
-        - **Importar CSV**
-        - **Objetivos Financieros**
-        - **Alertas Automáticas**
+    with col1:
+        st.markdown("### 📊 Análisis")
+        st.markdown("""
+        - **Resumen General**  
+        - **Movimientos**  
+        - **Balance por Cuenta**  
+        - **Dashboard Mensual**  
+        - **Dashboard Anual**  
+        - **Comparación Mes a Mes**  
+        - **Proyección Financiera (Forecast)**  
+        """)
 
-        ### 🛠 Sistema
-        - Multiusuario
-        - Etiquetas manuales + sugeridas
-        - Modo móvil optimizado
-        """
-    )
+    with col2:
+        st.markdown("### 🧭 Gestión")
+        st.markdown("""
+        - **Cargar Movimiento**  
+        - **Importar CSV**  
+        - **Objetivos Financieros**  
+        - **Alertas Automáticas**  
+        """)
+
+    with col3:
+        st.markdown("### 🛠 Sistema")
+        st.markdown("""
+        - Multiusuario  
+        - Etiquetas inteligentes  
+        - Modo móvil optimizado  
+        - Seguridad con RLS  
+        """)
+
+    st.markdown("---")
+    st.info("Usá el menú de la izquierda para navegar entre las secciones.")
 
 
 if __name__ == "__main__":
