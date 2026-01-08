@@ -24,51 +24,62 @@ def main():
 
     usuario_id = st.session_state["user"]["id"]
 
-    st.title("➕ Cargar Movimiento")
+    st.markdown("## ➕ Cargar Movimiento")
+    st.markdown("Completá los datos del movimiento para registrarlo en tu historial financiero.")
 
-    # Obtener catálogos desde Supabase (ya optimizado)
+    st.markdown("---")
+
+    # Obtener catálogos desde Supabase
     categorias = obtener_categorias(usuario_id)
     etiquetas_sugeridas = obtener_etiquetas(usuario_id)
     cuentas = obtener_cuentas(usuario_id)
 
+    # FORMULARIO
     with st.form("form_movimiento"):
-        fecha = st.date_input("Fecha")
 
-        # Categoría
-        categoria_sel = st.selectbox("Categoría", categorias + ["Otra..."])
-        categoria_nueva = ""
-        if categoria_sel == "Otra...":
-            categoria_nueva = st.text_input("Nueva categoría")
-        categoria_final = categoria_nueva.strip() if categoria_nueva else categoria_sel
+        col1, col2 = st.columns(2)
 
-        # Tipo
-        tipo = st.selectbox("Tipo", ["ingreso", "gasto"])
+        with col1:
+            fecha = st.date_input("📅 Fecha")
 
-        # Descripción y monto
-        descripcion = st.text_input("Descripción")
-        monto = st.number_input("Monto", min_value=0.0, step=0.01)
+            tipo = st.selectbox("📌 Tipo de movimiento", ["ingreso", "gasto"])
 
-        # Cuenta
-        cuenta_sel = st.selectbox("Cuenta", cuentas + ["Otra..."])
-        cuenta_nueva = ""
-        if cuenta_sel == "Otra...":
-            cuenta_nueva = st.text_input("Nueva cuenta")
-        cuenta_final = cuenta_nueva.strip() if cuenta_nueva else cuenta_sel
+            descripcion = st.text_input("📝 Descripción")
 
-        # Etiquetas sugeridas
+            monto = st.number_input("💵 Monto", min_value=0.0, step=0.01)
+
+        with col2:
+            # Categoría
+            categoria_sel = st.selectbox("📂 Categoría", categorias + ["Otra..."])
+            categoria_nueva = ""
+            if categoria_sel == "Otra...":
+                categoria_nueva = st.text_input("➕ Nueva categoría")
+            categoria_final = categoria_nueva.strip() if categoria_nueva else categoria_sel
+
+            # Cuenta
+            cuenta_sel = st.selectbox("🏦 Cuenta", cuentas + ["Otra..."])
+            cuenta_nueva = ""
+            if cuenta_sel == "Otra...":
+                cuenta_nueva = st.text_input("➕ Nueva cuenta")
+            cuenta_final = cuenta_nueva.strip() if cuenta_nueva else cuenta_sel
+
+        st.markdown("### 🏷 Etiquetas")
+
         etiquetas_multi = st.multiselect(
             "Etiquetas sugeridas",
             options=etiquetas_sugeridas,
         )
 
-        # Etiquetas adicionales
         etiquetas_extra = st.text_input(
             "Etiquetas adicionales (separadas por ;)",
             help="Ejemplo: urgente; tarjeta; online",
         )
 
-        submitted = st.form_submit_button("Guardar")
+        st.markdown("---")
 
+        submitted = st.form_submit_button("💾 Guardar movimiento", use_container_width=True)
+
+    # PROCESAMIENTO
     if submitted:
         # Guardar nuevas categoría/cuenta/etiquetas si corresponde
         if categoria_nueva.strip():
@@ -99,10 +110,10 @@ def main():
         )
 
         if ok:
-            st.success("Movimiento guardado correctamente.")
+            st.success("✅ Movimiento guardado correctamente.")
             st.rerun()
         else:
-            st.error("Error al guardar el movimiento.")
+            st.error("❌ Error al guardar el movimiento.")
 
 
 if __name__ == "__main__":
