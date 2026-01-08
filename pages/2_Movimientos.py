@@ -18,34 +18,36 @@ def main():
 
     usuario_id = st.session_state["user"]["id"]
 
-    st.title("📄 Movimientos")
+    st.markdown("## 📄 Movimientos")
+    st.markdown("Filtrá, buscá y administrá tus movimientos financieros.")
 
-    # Obtener movimientos del usuario
+    st.markdown("---")
+
+    # Obtener movimientos
     movimientos = listar_movimientos(usuario_id)
 
     if not movimientos:
         st.info("Todavía no hay movimientos cargados.")
         return
 
-    # Convertir a DataFrame
     df = pd.DataFrame([m.__dict__ for m in movimientos])
 
-    # Obtener catálogos desde Supabase
+    # Catálogos
     cuentas = obtener_cuentas(usuario_id)
     categorias = obtener_categorias(usuario_id)
 
-    st.subheader("Filtros")
+    st.markdown("### 🔍 Filtros")
 
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        fecha_desde = st.date_input("Fecha desde", value=None)
+        fecha_desde = st.date_input("📅 Fecha desde", value=None)
     with col2:
-        fecha_hasta = st.date_input("Fecha hasta", value=None)
+        fecha_hasta = st.date_input("📅 Fecha hasta", value=None)
     with col3:
-        cuenta_filtro = st.selectbox("Cuenta", ["Todas"] + cuentas)
+        cuenta_filtro = st.selectbox("🏦 Cuenta", ["Todas"] + cuentas)
     with col4:
-        categoria_filtro = st.selectbox("Categoría", ["Todas"] + categorias)
+        categoria_filtro = st.selectbox("📂 Categoría", ["Todas"] + categorias)
 
     # Aplicar filtros
     if fecha_desde:
@@ -57,15 +59,19 @@ def main():
     if categoria_filtro != "Todas":
         df = df[df["categoria"] == categoria_filtro]
 
-    st.subheader("Listado de movimientos")
+    st.markdown("### 📋 Listado de movimientos")
 
     if df.empty:
         st.info("No hay movimientos que coincidan con los filtros seleccionados.")
         return
 
-    st.dataframe(df[["id", "fecha", "categoria", "tipo", "descripcion", "monto", "cuenta"]])
+    st.dataframe(
+        df[["id", "fecha", "categoria", "tipo", "descripcion", "monto", "cuenta"]],
+        use_container_width=True
+    )
 
-    st.subheader("🗑 Borrar movimiento (lógico)")
+    st.markdown("---")
+    st.markdown("### 🗑 Borrar movimiento (lógico)")
 
     ids = df["id"].tolist()
     if not ids:
@@ -74,7 +80,7 @@ def main():
 
     id_sel = st.selectbox("Seleccionar ID a borrar", ids)
 
-    if st.button("Borrar seleccionado"):
+    if st.button("🗑 Borrar seleccionado", use_container_width=True):
         if eliminar_movimiento_logico(usuario_id, id_sel):
             st.success("Movimiento marcado como borrado.")
             st.rerun()

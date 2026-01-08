@@ -25,7 +25,10 @@ def main():
 
     usuario_id = st.session_state["user"]["id"]
 
-    st.title("✏️ Editar Movimiento")
+    st.markdown("## ✏️ Editar Movimiento")
+    st.markdown("Seleccioná un movimiento para modificar sus datos.")
+
+    st.markdown("---")
 
     # Obtener movimientos del usuario
     movimientos = obtener_movimientos(usuario_id)
@@ -35,96 +38,88 @@ def main():
         return
 
     ids = [m["id"] for m in movimientos]
-    id_sel = st.selectbox("Seleccionar ID de movimiento", ids)
+    id_sel = st.selectbox("📄 Seleccionar movimiento por ID", ids)
 
     mov = obtener_movimiento_por_id(usuario_id, id_sel)
     if not mov:
         st.error("No se encontró el movimiento seleccionado.")
         return
 
-    # Obtener catálogos desde Supabase
+    # Obtener catálogos
     categorias = obtener_categorias(usuario_id)
     etiquetas_sugeridas = obtener_etiquetas(usuario_id)
     cuentas = obtener_cuentas(usuario_id)
 
-    # Procesar etiquetas existentes
+    # Etiquetas existentes
     etiquetas_raw = mov.get("etiquetas") or []
     if isinstance(etiquetas_raw, list):
         etiquetas_existentes = etiquetas_raw
     else:
         try:
-            data = json.loads(etiquetas_raw)
-            etiquetas_existentes = data if isinstance(data, list) else []
-        except Exception:
+            etiquetas_existentes = json.loads(etiquetas_raw)
+        except:
             etiquetas_existentes = []
 
-    # Procesar fecha
+    # Fecha
     try:
         fecha_valor = pd.to_datetime(mov.get("fecha")).date()
-    except Exception:
+    except:
         fecha_valor = None
 
+    # FORMULARIO
     with st.form("form_editar"):
-        fecha = st.date_input("Fecha", value=fecha_valor)
 
-        # -----------------------------
-        # CATEGORÍA
-        # -----------------------------
-        categoria_actual = mov.get("categoria") or ""
+        col1, col2 = st.columns(2)
 
-        opciones_categorias = categorias + ["Otra..."]
+        with col1:
+            fecha = st.date_input("📅 Fecha", value=fecha_valor)
 
-        if categoria_actual in categorias:
-            idx_categoria = opciones_categorias.index(categoria_actual)
-        else:
-            idx_categoria = len(categorias)  # "Otra..."
+            tipo = st.selectbox(
+                "📌 Tipo",
+                ["ingreso", "gasto"],
+                index=0 if mov.get("tipo") == "ingreso" else 1
+            )
 
-        categoria_sel = st.selectbox(
-            "Categoría",
-            opciones_categorias,
-            index=idx_categoria
-        )
+            descripcion = st.text_input("📝 Descripción", value=mov.get("descripcion") or "")
 
-        categoria_nueva = ""
-        if categoria_sel == "Otra...":
-            categoria_nueva = st.text_input("Nueva categoría")
+            monto = st.number_input(
+                "💵 Monto",
+                min_value=0.0,
+                step=0.01,
+                value=float(mov.get("monto") or 0.0)
+            )
 
-        categoria_final = categoria_nueva.strip() if categoria_nueva else categoria_sel
+        with col2:
+            # Categoría
+            categoria_actual = mov.get("categoria") or ""
+            opciones_categorias = categorias + ["Otra..."]
 
-        # -----------------------------
-        # TIPO, DESCRIPCIÓN, MONTO
-        # -----------------------------
-        tipo = st.selectbox("Tipo", ["ingreso", "gasto"], index=0 if mov.get("tipo") == "ingreso" else 1)
-        descripcion = st.text_input("Descripción", value=mov.get("descripcion") or "")
-        monto = st.number_input("Monto", min_value=0.0, step=0.01, value=float(mov.get("monto") or 0.0))
+            idx_categoria = opciones_categorias.index(categoria_actual) if categoria_actual in categorias else len(categorias)
 
-        # -----------------------------
-        # CUENTA
-        # -----------------------------
-        cuenta_actual = mov.get("cuenta") or ""
+            categoria_sel = st.selectbox("📂 Categoría", opciones_categorias, index=idx_categoria)
 
-        opciones_cuentas = cuentas + ["Otra..."]
+            categoria_nueva = ""
+            if categoria_sel == "Otra...":
+                categoria_nueva = st.text_input("➕ Nueva categoría")
 
-        if cuenta_actual in cuentas:
-            idx_cuenta = opciones_cuentas.index(cuenta_actual)
-        else:
-            idx_cuenta = len(cuentas)  # "Otra..."
+            categoria_final = categoria_nueva.strip() if categoria_nueva else categoria_sel
 
-        cuenta_sel = st.selectbox(
-            "Cuenta",
-            opciones_cuentas,
-            index=idx_cuenta
-        )
+            # Cuenta
+            cuenta_actual = mov.get("cuenta") or ""
+            opciones_cuentas = cuentas + ["Otra..."]
 
-        cuenta_nueva = ""
-        if cuenta_sel == "Otra...":
-            cuenta_nueva = st.text_input("Nueva cuenta")
+            idx_cuenta = opciones_cuentas.index(cuenta_actual) if cuenta_actual in cuentas else len(cuentas)
 
-        cuenta_final = cuenta_nueva.strip() if cuenta_nueva else cuenta_sel
+            cuenta_sel = st.selectbox("🏦 Cuenta", opciones_cuentas, index=idx_cuenta)
 
-        # -----------------------------
-        # ETIQUETAS
-        # -----------------------------
+            cuenta_nueva = ""
+            if cuenta_sel == "Otra...":
+                cuenta_nueva = st.text_input("➕ Nueva cuenta")
+
+            cuenta_final = cuenta_nueva.strip() if cuenta_nueva else cuenta_sel
+
+        st.markdown("### 🏷 Etiquetas")
+
         etiquetas_multi = st.multiselect(
             "Etiquetas sugeridas",
             options=etiquetas_sugeridas,
@@ -138,13 +133,12 @@ def main():
             value=etiquetas_extra_default,
         )
 
-        submitted = st.form_submit_button("Guardar cambios")
+        st.markdown("---")
 
-    # -------------------------------------------------------------------
+        submitted = st.form_submit_button("💾 Guardar cambios", use_container_width=True)
+
     # GUARDAR CAMBIOS
-    # -------------------------------------------------------------------
     if submitted:
-        # Guardar nuevas categoría/cuenta/etiquetas si corresponde
         if categoria_nueva.strip():
             agregar_categoria(usuario_id, categoria_nueva)
 
@@ -174,10 +168,10 @@ def main():
         )
 
         if ok:
-            st.success("Movimiento actualizado correctamente.")
+            st.success("✅ Movimiento actualizado correctamente.")
             st.rerun()
         else:
-            st.error("Error al actualizar el movimiento.")
+            st.error("❌ Error al actualizar el movimiento.")
 
 
 if __name__ == "__main__":
