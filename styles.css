@@ -7,17 +7,20 @@ body, .stApp {
     padding: 0;
 }
 
-/* Espacio para la topbar fija */
-.stApp {
-    padding-top: 70px !important;
-}
-
 html, body {
     overflow-x: hidden;
 }
 
 /* =============================== */
-/*        RESPONSIVE MÉTRICAS      */
+/*        ESPACIADO TOPBAR         */
+/* =============================== */
+
+.stApp {
+    padding-top: 75px !important;
+}
+
+/* =============================== */
+/*        MÉTRICAS RESPONSIVE      */
 /* =============================== */
 
 @media (max-width: 600px) {
@@ -41,19 +44,14 @@ html, body {
 /* =============================== */
 
 .stButton > button {
-    padding: 0.8rem 1.2rem;
-    font-size: 1.1rem;
+    padding: 0.7rem 1.1rem;
+    font-size: 1.05rem;
+    border-radius: 6px;
 }
 
 .stTextInput > div > div > input,
 .stNumberInput > div > div > input {
-    font-size: 1.1rem;
-    padding: 0.6rem;
+    font-size: 1.05rem;
+    padding: 0.55rem;
+    border-radius: 6px;
 }
-
-/* =============================== */
-/*   (IMPORTANTE) ELIMINAMOS LA    */
-/*   BARRA VIEJA QUE ROMPÍA TODO   */
-/* =============================== */
-
-/* Nada más aquí. La barra real viene desde ui.py */
