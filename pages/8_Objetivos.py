@@ -12,10 +12,6 @@ def formato_argentino(valor):
     return f"{valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
-# -------------------------------
-#   ARCHIVO POR USUARIO
-# -------------------------------
-
 def get_user_obj_file(user_id: str) -> str:
     os.makedirs("objetivos", exist_ok=True)
     return os.path.join("objetivos", f"{user_id}.json")
@@ -30,7 +26,6 @@ def cargar_objetivos(user_id: str):
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    # Migración suave
     if "cuentas_min" not in data:
         data["cuentas_min"] = {}
 
@@ -43,24 +38,20 @@ def guardar_objetivos(user_id: str, data):
         json.dump(data, f, indent=4, ensure_ascii=False)
 
 
-# -------------------------------
-#   PÁGINA PRINCIPAL
-# -------------------------------
-
 def main():
     check_auth()
-
-    # Barra fija + menú superior
     topbar()
-
 
     user_id = st.session_state["user"]["id"]
 
-    st.title("🎯 Objetivos Financieros")
+    st.markdown("## 🎯 Objetivos Financieros")
+    st.markdown("Definí metas para tus cuentas y categorías, y seguí tu progreso.")
+
+    st.markdown("---")
 
     objetivos = cargar_objetivos(user_id)
-
     movimientos = listar_movimientos(user_id)
+
     if not movimientos:
         st.info("Todavía no hay movimientos cargados.")
         return
@@ -84,9 +75,8 @@ def main():
     )
 
     # -------------------------------
-    #   OBJETIVOS POR CUENTA
+    # OBJETIVOS POR CUENTA
     # -------------------------------
-
     st.header("🏦 Objetivos por Cuenta")
 
     cuentas = sorted(df["Cuenta"].unique().tolist())
@@ -108,13 +98,13 @@ def main():
         value=float(objetivos["cuentas_min"].get(cuenta_sel, 0)),
     )
 
-    if st.button("Guardar objetivos de cuenta"):
+    if st.button("💾 Guardar objetivos de cuenta", use_container_width=True):
         objetivos["cuentas"][cuenta_sel] = objetivo_total
         objetivos["cuentas_min"][cuenta_sel] = objetivo_minimo
         guardar_objetivos(user_id, objetivos)
         st.success("Objetivos guardados.")
 
-    st.subheader("Progreso por cuenta")
+    st.subheader("📊 Progreso por cuenta")
 
     saldo_por_cuenta = df.groupby("Cuenta")["Monto_signed"].sum()
 
@@ -141,9 +131,8 @@ def main():
     st.markdown("---")
 
     # -------------------------------
-    #   OBJETIVOS POR CATEGORÍA
+    # OBJETIVOS POR CATEGORÍA
     # -------------------------------
-
     st.header("📂 Objetivos por Categoría")
 
     categorias = sorted(df["Categoría"].unique().tolist())
@@ -157,12 +146,12 @@ def main():
         value=float(objetivos["categorias"].get(categoria_sel, 0)),
     )
 
-    if st.button("Guardar objetivo de categoría"):
+    if st.button("💾 Guardar objetivo de categoría", use_container_width=True):
         objetivos["categorias"][categoria_sel] = objetivo_cat
         guardar_objetivos(user_id, objetivos)
         st.success("Objetivo guardado.")
 
-    st.subheader("Progreso por categoría")
+    st.subheader("📊 Progreso por categoría")
 
     gastos_por_cat = (
         df[df["Tipo"] == "gasto"]

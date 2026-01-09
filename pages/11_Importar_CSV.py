@@ -8,9 +8,6 @@ from ui import topbar
 
 
 def formato_argentino_a_float(valor):
-    """
-    Convierte valores tipo '10.500,75' → 10500.75
-    """
     if isinstance(valor, str):
         valor = valor.replace(".", "").replace(",", ".")
     try:
@@ -20,34 +17,33 @@ def formato_argentino_a_float(valor):
 
 
 def main():
-    # Seguridad
     check_auth()
-
-    # Barra fija + menú superior
     topbar()
 
     usuario_id = st.session_state["user"]["id"]
 
-    st.title("📥 Importar Movimientos desde CSV")
+    st.markdown("## 📥 Importar Movimientos desde CSV")
+    st.markdown("Subí un archivo CSV para cargar múltiples movimientos de forma automática.")
 
-    st.write("""
-    Subí un archivo CSV con las siguientes columnas:
+    st.info(
+        """
+        El archivo debe contener las siguientes columnas:
 
-    - **fecha** (YYYY-MM-DD)
-    - **categoria**
-    - **tipo** (ingreso / gasto)
-    - **descripcion**
-    - **monto**
-    - **cuenta**
-    - **etiquetas** (opcional, separadas por comas)
-    """)
+        - **fecha** (YYYY-MM-DD)  
+        - **categoria**  
+        - **tipo** (ingreso / gasto)  
+        - **descripcion**  
+        - **monto**  
+        - **cuenta**  
+        - **etiquetas** (opcional, separadas por comas)
+        """
+    )
 
     archivo = st.file_uploader("Seleccionar archivo CSV", type=["csv"])
 
     if archivo is None:
         return
 
-    # Leer CSV
     try:
         df = pd.read_csv(archivo)
     except Exception as e:
@@ -62,18 +58,15 @@ def main():
         st.write("Columnas encontradas:", df.columns.tolist())
         return
 
-    # Convertir montos al formato correcto
     df["monto"] = df["monto"].apply(formato_argentino_a_float)
 
-    # Procesar etiquetas si existen
     if "etiquetas" not in df.columns:
         df["etiquetas"] = ""
 
-    st.subheader("Previsualización del archivo")
-    st.dataframe(df)
+    st.subheader("📄 Previsualización del archivo")
+    st.dataframe(df, use_container_width=True)
 
-    # Importar movimientos
-    if st.button("Importar movimientos"):
+    if st.button("📥 Importar movimientos", use_container_width=True):
         errores = 0
         cargados = 0
 
@@ -87,14 +80,14 @@ def main():
                     usuario_id=usuario_id,
                     fecha=str(row["fecha"]),
                     categoria=row["categoria"],
-                    tipo=row["tipo"].lower(),  # 🔥 Normalizamos
+                    tipo=row["tipo"].lower(),
                     descripcion=row["descripcion"],
                     monto=float(row["monto"]),
                     cuenta=row["cuenta"],
                     etiquetas_json=json.dumps(etiquetas, ensure_ascii=False),
                 )
                 cargados += 1
-            except Exception as e:
+            except:
                 errores += 1
 
         st.success(f"Movimientos cargados: {cargados}")

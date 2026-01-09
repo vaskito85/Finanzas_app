@@ -12,29 +12,27 @@ def formato_argentino(valor):
 
 
 def main():
-    # Seguridad
     check_auth()
-
-    # Barra fija + menú superior
     topbar()
 
     usuario_id = st.session_state["user"]["id"]
 
-    st.title("📊 Dashboard Anual")
+    st.markdown("## 📊 Dashboard Anual")
+    st.markdown("Visualizá tu evolución financiera año por año.")
 
-    # Obtener movimientos desde Supabase
+    st.markdown("---")
+
     movimientos = listar_movimientos(usuario_id)
 
     if not movimientos:
         st.info("Todavía no hay movimientos cargados.")
         return
 
-    # Convertir a DataFrame
     df = pd.DataFrame(
         [
             {
                 "Fecha": m.fecha,
-                "Tipo": m.tipo.lower(),   # 🔥 Normalizamos a minúsculas
+                "Tipo": m.tipo.lower(),
                 "Categoría": m.categoria,
                 "Monto": m.monto,
                 "Cuenta": m.cuenta,
@@ -43,19 +41,14 @@ def main():
         ]
     )
 
-    # Procesamiento de fechas
     df["Fecha"] = pd.to_datetime(df["Fecha"])
     df["Año"] = df["Fecha"].dt.year
 
-    # Monto firmado según tipo
     df["Monto_signed"] = df.apply(
         lambda row: row["Monto"] if row["Tipo"] == "ingreso" else -row["Monto"],
         axis=1,
     )
 
-    # ----------------------------------------------------------------------
-    # 📅 RESUMEN POR AÑO
-    # ----------------------------------------------------------------------
     st.header("📅 Resumen por Año")
 
     resumen = (
@@ -69,11 +62,10 @@ def main():
 
     resumen = resumen.fillna(0)
 
-    st.dataframe(resumen)
+    st.dataframe(resumen, use_container_width=True)
 
-    # ----------------------------------------------------------------------
-    # 📈 EVOLUCIÓN DEL BALANCE ANUAL
-    # ----------------------------------------------------------------------
+    st.markdown("---")
+
     st.subheader("📈 Evolución del Balance Anual")
 
     chart = (
@@ -91,9 +83,6 @@ def main():
 
     st.markdown("---")
 
-    # ----------------------------------------------------------------------
-    # 🏆 CATEGORÍAS MÁS RELEVANTES DEL AÑO
-    # ----------------------------------------------------------------------
     st.subheader("🏆 Categorías más relevantes del año")
 
     año_sel = st.selectbox("Seleccionar año", resumen["Año"].tolist())
@@ -109,11 +98,10 @@ def main():
         .head(5)
     )
 
-    st.dataframe(top_cat)
+    st.dataframe(top_cat, use_container_width=True)
 
-    # ----------------------------------------------------------------------
-    # 💰 DISTRIBUCIÓN DE GASTOS POR CATEGORÍA
-    # ----------------------------------------------------------------------
+    st.markdown("---")
+
     st.subheader("💰 Distribución de gastos por categoría")
 
     chart_torta = (

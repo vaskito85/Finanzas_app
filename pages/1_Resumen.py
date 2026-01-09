@@ -12,13 +12,14 @@ def formato_argentino(valor):
 
 def main():
     check_auth()
-
-    # Barra fija + menú superior
     topbar()
 
     usuario_id = st.session_state["user"]["id"]
 
-    st.title("📊 Resumen General")
+    st.markdown("## 📊 Resumen General")
+    st.markdown("Visualizá tus ingresos, gastos y evolución financiera.")
+
+    st.markdown("---")
 
     movimientos = listar_movimientos(usuario_id)
 
@@ -50,9 +51,9 @@ def main():
     balance = total_ingresos - total_gastos
 
     col1, col2, col3 = st.columns(3)
-    col1.metric("Ingresos", f"${formato_argentino(total_ingresos)}")
-    col2.metric("Gastos", f"${formato_argentino(total_gastos)}")
-    col3.metric("Balance", f"${formato_argentino(balance)}")
+    col1.metric("💰 Ingresos", f"${formato_argentino(total_ingresos)}")
+    col2.metric("💸 Gastos", f"${formato_argentino(total_gastos)}")
+    col3.metric("📈 Balance", f"${formato_argentino(balance)}")
 
     st.markdown("---")
 
@@ -74,7 +75,7 @@ def main():
         .reset_index()
     )
 
-    st.dataframe(categorias)
+    st.dataframe(categorias, use_container_width=True)
 
 
 if __name__ == "__main__":

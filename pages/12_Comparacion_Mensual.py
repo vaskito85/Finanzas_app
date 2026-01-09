@@ -12,29 +12,27 @@ def formato_argentino(valor):
 
 
 def main():
-    # Seguridad
     check_auth()
-
-    # Barra fija + menú superior
     topbar()
 
     usuario_id = st.session_state["user"]["id"]
 
-    st.title("📊 Comparación Mes a Mes")
+    st.markdown("## 📊 Comparación Mes a Mes")
+    st.markdown("Analizá cómo varió tu balance entre los últimos dos meses.")
 
-    # Obtener movimientos desde Supabase
+    st.markdown("---")
+
     movimientos = listar_movimientos(usuario_id)
 
     if not movimientos:
         st.info("Todavía no hay movimientos cargados.")
         return
 
-    # Convertir a DataFrame
     df = pd.DataFrame(
         [
             {
                 "Fecha": m.fecha,
-                "Tipo": m.tipo.lower(),   # 🔥 Normalizamos a minúsculas
+                "Tipo": m.tipo.lower(),
                 "Categoría": m.categoria,
                 "Monto": m.monto,
                 "Cuenta": m.cuenta,
@@ -43,11 +41,9 @@ def main():
         ]
     )
 
-    # Procesamiento de fechas
     df["Fecha"] = pd.to_datetime(df["Fecha"])
     df["Mes"] = df["Fecha"].dt.to_period("M").astype(str)
 
-    # Monto firmado según tipo
     df["Monto_signed"] = df.apply(
         lambda row: row["Monto"] if row["Tipo"] == "ingreso" else -row["Monto"],
         axis=1,
@@ -73,15 +69,13 @@ def main():
     variacion = balance_act - balance_ant
     variacion_pct = (variacion / abs(balance_ant)) * 100 if balance_ant != 0 else 0
 
-    # Métricas
     col1, col2, col3 = st.columns(3)
-    col1.metric("Balance mes anterior", f"${formato_argentino(balance_ant)}")
-    col2.metric("Balance mes actual", f"${formato_argentino(balance_act)}")
-    col3.metric("Variación", f"${formato_argentino(variacion)}", f"{variacion_pct:.1f}%")
+    col1.metric("💰 Balance mes anterior", f"${formato_argentino(balance_ant)}")
+    col2.metric("💸 Balance mes actual", f"${formato_argentino(balance_act)}")
+    col3.metric("📈 Variación", f"${formato_argentino(variacion)}", f"{variacion_pct:.1f}%")
 
     st.markdown("---")
 
-    # Gráfico mensual
     st.subheader("📈 Gráfico de comparación mensual")
 
     resumen = (
@@ -106,7 +100,6 @@ def main():
 
     st.markdown("---")
 
-    # Categorías que más crecieron
     st.subheader("🏆 Categorías que más crecieron")
 
     gastos_act = (
@@ -133,7 +126,7 @@ def main():
 
     comparacion = comparacion.sort_values("Variación", ascending=False).head(5)
 
-    st.dataframe(comparacion)
+    st.dataframe(comparacion, use_container_width=True)
 
 
 if __name__ == "__main__":

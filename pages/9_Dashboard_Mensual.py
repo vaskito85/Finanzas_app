@@ -11,29 +11,27 @@ def formato_argentino(valor):
 
 
 def main():
-    # Seguridad
     check_auth()
-
-    # Barra fija + menú superior
     topbar()
 
     usuario_id = st.session_state["user"]["id"]
 
-    st.title("📅 Dashboard Mensual")
+    st.markdown("## 📅 Dashboard Mensual")
+    st.markdown("Analizá ingresos, gastos y categorías de un mes específico.")
 
-    # Obtener movimientos desde Supabase
+    st.markdown("---")
+
     movimientos = listar_movimientos(usuario_id)
 
     if not movimientos:
         st.info("Todavía no hay movimientos cargados.")
         return
 
-    # Convertir a DataFrame
     df = pd.DataFrame(
         [
             {
                 "Fecha": m.fecha,
-                "Tipo": m.tipo.lower(),   # 🔥 Normalizamos a minúsculas
+                "Tipo": m.tipo.lower(),
                 "Categoría": m.categoria,
                 "Monto": m.monto,
                 "Cuenta": m.cuenta,
@@ -42,42 +40,35 @@ def main():
         ]
     )
 
-    # Procesamiento de fechas
     df["Fecha"] = pd.to_datetime(df["Fecha"])
     df["Mes"] = df["Fecha"].dt.to_period("M").astype(str)
 
-    # Monto firmado según tipo
     df["Monto_signed"] = df.apply(
         lambda row: row["Monto"] if row["Tipo"] == "ingreso" else -row["Monto"],
         axis=1,
     )
 
-    # Selección de mes
     meses = sorted(df["Mes"].unique())
     mes_sel = st.selectbox("Seleccionar mes", meses)
 
     df_mes = df[df["Mes"] == mes_sel]
 
-    # Cálculos del mes
     ingresos = df_mes[df_mes["Tipo"] == "ingreso"]["Monto"].sum()
     gastos = df_mes[df_mes["Tipo"] == "gasto"]["Monto"].sum()
     balance = ingresos - gastos
 
-    # Métricas
     col1, col2, col3 = st.columns(3)
-    col1.metric("Ingresos", f"${formato_argentino(ingresos)}")
-    col2.metric("Gastos", f"${formato_argentino(gastos)}")
-    col3.metric("Balance", f"${formato_argentino(balance)}")
+    col1.metric("💰 Ingresos", f"${formato_argentino(ingresos)}")
+    col2.metric("💸 Gastos", f"${formato_argentino(gastos)}")
+    col3.metric("📈 Balance", f"${formato_argentino(balance)}")
 
     st.markdown("---")
 
-    # Evolución del mes
     st.subheader("📈 Evolución del mes")
     st.line_chart(df_mes, x="Fecha", y="Monto_signed")
 
     st.markdown("---")
 
-    # Categorías del mes
     st.subheader("🏆 Categorías del mes")
     categorias = (
         df_mes.groupby("Categoría")["Monto"]
@@ -85,7 +76,8 @@ def main():
         .sort_values(ascending=False)
         .reset_index()
     )
-    st.dataframe(categorias)
+
+    st.dataframe(categorias, use_container_width=True)
 
 
 if __name__ == "__main__":

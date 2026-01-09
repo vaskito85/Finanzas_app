@@ -7,7 +7,6 @@ from models import listar_movimientos
 from auth import check_auth
 from ui import topbar
 
-
 OBJ_FILE = "objetivos.json"
 
 
@@ -22,7 +21,6 @@ def cargar_objetivos():
     with open(OBJ_FILE, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    # Compatibilidad con versiones anteriores
     if "cuentas_min" not in data:
         data["cuentas_min"] = {}
 
@@ -30,15 +28,15 @@ def cargar_objetivos():
 
 
 def main():
-    # Seguridad
     check_auth()
-
-    # Barra fija + menú superior
     topbar()
 
     usuario_id = st.session_state["user"]["id"]
 
-    st.title("🚨 Alertas Automáticas")
+    st.markdown("## 🚨 Alertas Automáticas")
+    st.markdown("Monitoreo inteligente de tus cuentas, categorías y hábitos de gasto.")
+
+    st.markdown("---")
 
     objetivos = cargar_objetivos()
     movimientos = listar_movimientos(usuario_id)
@@ -47,12 +45,11 @@ def main():
         st.info("Todavía no hay movimientos cargados.")
         return
 
-    # Convertir a DataFrame
     df = pd.DataFrame(
         [
             {
                 "Fecha": m.fecha,
-                "Tipo": m.tipo.lower(),   # 🔥 Normalizamos a minúsculas
+                "Tipo": m.tipo.lower(),
                 "Categoría": m.categoria,
                 "Monto": m.monto,
                 "Cuenta": m.cuenta,
@@ -79,29 +76,27 @@ def main():
         minimo = objetivos["cuentas_min"].get(cuenta)
         objetivo = objetivos["cuentas"].get(cuenta)
 
-        # Alerta por mínimo
         if minimo is not None:
             if saldo < minimo:
                 st.error(
-                    f"🔻 La cuenta **{cuenta}** está por debajo del mínimo.\n"
+                    f"🔻 **{cuenta}** por debajo del mínimo.\n"
                     f"Saldo: ${formato_argentino(saldo)} — Mínimo: ${formato_argentino(minimo)}"
                 )
             else:
                 st.success(
-                    f"✔ La cuenta **{cuenta}** está por encima del mínimo.\n"
+                    f"✔ **{cuenta}** por encima del mínimo.\n"
                     f"Saldo: ${formato_argentino(saldo)} — Mínimo: ${formato_argentino(minimo)}"
                 )
 
-        # Alerta por objetivo
         if objetivo is not None:
             if saldo < objetivo:
                 st.warning(
-                    f"⚠ La cuenta **{cuenta}** aún no alcanzó el objetivo total.\n"
+                    f"⚠ **{cuenta}** aún no alcanzó el objetivo.\n"
                     f"Saldo: ${formato_argentino(saldo)} — Objetivo: ${formato_argentino(objetivo)}"
                 )
             else:
                 st.success(
-                    f"✔ La cuenta **{cuenta}** alcanzó el objetivo total.\n"
+                    f"🏆 **{cuenta}** alcanzó el objetivo total.\n"
                     f"Saldo: ${formato_argentino(saldo)} — Objetivo: ${formato_argentino(objetivo)}"
                 )
 
@@ -124,12 +119,12 @@ def main():
         if objetivo is not None:
             if gasto > objetivo:
                 st.error(
-                    f"🔥 La categoría **{categoria}** superó el límite.\n"
+                    f"🔥 **{categoria}** superó el límite.\n"
                     f"Gasto: ${formato_argentino(gasto)} — Límite: ${formato_argentino(objetivo)}"
                 )
             else:
                 st.success(
-                    f"✔ La categoría **{categoria}** está dentro del límite.\n"
+                    f"✔ **{categoria}** dentro del límite.\n"
                     f"Gasto: ${formato_argentino(gasto)} — Límite: ${formato_argentino(objetivo)}"
                 )
 
@@ -147,12 +142,12 @@ def main():
 
     if balance_actual < 0:
         st.error(
-            f"⚠ El balance del mes **{mes_actual}** es negativo: "
+            f"⚠ Balance negativo en **{mes_actual}**: "
             f"${formato_argentino(balance_actual)}"
         )
     else:
         st.success(
-            f"✔ El balance del mes **{mes_actual}** es positivo: "
+            f"✔ Balance positivo en **{mes_actual}**: "
             f"${formato_argentino(balance_actual)}"
         )
 

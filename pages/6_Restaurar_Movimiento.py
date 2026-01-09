@@ -14,7 +14,10 @@ def main():
     usuario = st.session_state.get("user")
     usuario_id = usuario["id"]
 
-    st.title("♻️ Restaurar Movimiento")
+    st.markdown("## ♻️ Restaurar Movimiento")
+    st.markdown("Seleccioná un movimiento borrado para restaurarlo.")
+
+    st.markdown("---")
 
     movimientos = listar_movimientos_borrados(usuario_id)
 
@@ -24,13 +27,18 @@ def main():
 
     df = pd.DataFrame([m.__dict__ for m in movimientos])
 
-    st.subheader("Movimientos borrados")
-    st.dataframe(df[["id", "fecha", "categoria", "tipo", "descripcion", "monto", "cuenta"]])
+    st.subheader("🗂 Movimientos borrados")
+    st.dataframe(
+        df[["id", "fecha", "categoria", "tipo", "descripcion", "monto", "cuenta"]],
+        use_container_width=True
+    )
+
+    st.markdown("---")
 
     ids = df["id"].tolist()
     id_sel = st.selectbox("Seleccionar ID a restaurar", ids)
 
-    if st.button("Restaurar seleccionado"):
+    if st.button("♻️ Restaurar seleccionado", use_container_width=True):
         if restaurar_movimiento(usuario_id, id_sel):
             st.success("Movimiento restaurado correctamente.")
             st.rerun()
