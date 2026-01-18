@@ -1,51 +1,56 @@
 from dataclasses import dataclass
-from typing import List, Any
-from db import obtener_movimientos, obtener_movimientos_borrados
+from typing import List, Any, Dict
 import json
+import streamlit as st
 
+from db import obtener_movimientos, obtener_movimientos_borrados
 
 @dataclass
 class Movimiento:
-    id: int
+    id: Any
     fecha: str
     categoria: str
     tipo: str
     descripcion: str
     monto: float
     cuenta: str
-    etiquetas: list
-    created_at: str | None
-    deleted: bool
+    etiquetas: List[str]
+    created_at: Any = None
+    deleted: bool = False
 
 
 def _parse_etiquetas(raw: Any) -> list:
     """Convierte etiquetas en lista segura."""
     if raw is None:
         return []
-
     if isinstance(raw, list):
-        return raw
-
-    if isinstance(raw, str):
+        return [str(x) for x in raw]
+    try:
+        # Si viene como JSON string
+        return json.loads(raw)
+    except Exception:
+        # Fallback: intentar separar por comas
         try:
-            data = json.loads(raw)
-            return data if isinstance(data, list) else []
+            return [x.strip() for x in str(raw).split(",") if x.strip()]
         except Exception:
             return []
-
-    return []
 
 
 def _parse_deleted(value: Any) -> bool:
     """Convierte deleted en booleano seguro."""
     if isinstance(value, bool):
         return value
-    if value in ("true", "True", "1", 1):
+    if value in (1, "1", "true", "True", "TRUE"):
         return True
     return False
 
 
+@st.cache_data(ttl=300)
 def listar_movimientos(usuario_id: str) -> List[Movimiento]:
+    """
+    Devuelve la lista de movimientos como objetos Movimiento.
+    Cacheada por Streamlit por defecto 300s (5 minutos).
+    """
     rows = obtener_movimientos(usuario_id)
     movimientos: List[Movimiento] = []
 
@@ -68,7 +73,12 @@ def listar_movimientos(usuario_id: str) -> List[Movimiento]:
     return movimientos
 
 
+@st.cache_data(ttl=300)
 def listar_movimientos_borrados(usuario_id: str) -> List[Movimiento]:
+    """
+    Lista movimientos marcados como borrados (deleted = True).
+    Cacheada por 300s.
+    """
     rows = obtener_movimientos_borrados(usuario_id)
     movimientos: List[Movimiento] = []
 

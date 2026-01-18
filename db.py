@@ -1,12 +1,12 @@
 import json
 from typing import Any, Dict, List, Optional
-from supabase_client import get_supabase_client
+import streamlit as st
 
+from supabase_client import get_supabase_client
 
 # ---------------------------------------------------------
 #  INSERTAR MOVIMIENTO
 # ---------------------------------------------------------
-
 def insertar_movimiento(
     usuario_id: str,
     fecha: str,
@@ -15,32 +15,31 @@ def insertar_movimiento(
     descripcion: str,
     monto: float,
     cuenta: str,
-    etiquetas_json: Optional[str]
+    etiquetas_json: Optional[str],
 ) -> bool:
+    """
+    Inserta un movimiento en la tabla 'movimientos'.
+    Devuelve True si fue insertado correctamente.
+    """
     try:
         supabase = get_supabase_client()
 
-        try:
-            etiquetas = json.loads(etiquetas_json) if etiquetas_json else []
-            if not isinstance(etiquetas, list):
-                etiquetas = []
-        except Exception:
-            etiquetas = []
-
-        data = {
+        payload = {
             "usuario_id": usuario_id,
             "fecha": fecha,
-            "categoria": categoria or "Sin categoría",
+            "categoria": categoria,
             "tipo": tipo,
-            "descripcion": descripcion or "",
-            "monto": float(monto) if monto is not None else 0.0,
-            "cuenta": cuenta or "Sin cuenta",
-            "etiquetas": etiquetas,
+            "descripcion": descripcion,
+            "monto": monto,
+            "cuenta": cuenta,
+            "etiquetas": etiquetas_json or "[]",
             "deleted": False,
         }
 
-        result = supabase.table("movimientos").insert(data).execute()
+        result = supabase.table("movimientos").insert(payload).execute()
 
+        # Si la inserción fue exitosa, invalidamos cache de movimientos
+        st.cache_data.clear()
         return result.data is not None
 
     except Exception as e:
@@ -51,7 +50,6 @@ def insertar_movimiento(
 # ---------------------------------------------------------
 #  OBTENER MOVIMIENTOS (ACTIVOS)
 # ---------------------------------------------------------
-
 def obtener_movimientos(usuario_id: str) -> List[Dict[str, Any]]:
     try:
         supabase = get_supabase_client()
@@ -76,7 +74,6 @@ def obtener_movimientos(usuario_id: str) -> List[Dict[str, Any]]:
 # ---------------------------------------------------------
 #  OBTENER MOVIMIENTOS BORRADOS
 # ---------------------------------------------------------
-
 def obtener_movimientos_borrados(usuario_id: str) -> List[Dict[str, Any]]:
     try:
         supabase = get_supabase_client()
@@ -101,7 +98,6 @@ def obtener_movimientos_borrados(usuario_id: str) -> List[Dict[str, Any]]:
 # ---------------------------------------------------------
 #  OBTENER UN MOVIMIENTO POR ID
 # ---------------------------------------------------------
-
 def obtener_movimiento_por_id(usuario_id: str, movimiento_id: int) -> Optional[Dict[str, Any]]:
     try:
         supabase = get_supabase_client()
@@ -125,7 +121,6 @@ def obtener_movimiento_por_id(usuario_id: str, movimiento_id: int) -> Optional[D
 # ---------------------------------------------------------
 #  ACTUALIZAR MOVIMIENTO
 # ---------------------------------------------------------
-
 def actualizar_movimiento(
     usuario_id: str,
     movimiento_id: int,
@@ -135,36 +130,31 @@ def actualizar_movimiento(
     descripcion: str,
     monto: float,
     cuenta: str,
-    etiquetas_json: Optional[str]
+    etiquetas_json: Optional[str],
 ) -> bool:
     try:
         supabase = get_supabase_client()
 
-        try:
-            etiquetas = json.loads(etiquetas_json) if etiquetas_json else []
-            if not isinstance(etiquetas, list):
-                etiquetas = []
-        except Exception:
-            etiquetas = []
-
-        data = {
+        payload = {
             "fecha": fecha,
-            "categoria": categoria or "Sin categoría",
+            "categoria": categoria,
             "tipo": tipo,
-            "descripcion": descripcion or "",
-            "monto": float(monto) if monto is not None else 0.0,
-            "cuenta": cuenta or "Sin cuenta",
-            "etiquetas": etiquetas,
+            "descripcion": descripcion,
+            "monto": monto,
+            "cuenta": cuenta,
+            "etiquetas": etiquetas_json or "[]",
         }
 
         result = (
             supabase.table("movimientos")
-            .update(data)
+            .update(payload)
             .eq("id", movimiento_id)
             .eq("usuario_id", usuario_id)
             .execute()
         )
 
+        # Invalidar cache tras actualización
+        st.cache_data.clear()
         return result.data is not None
 
     except Exception as e:
@@ -175,7 +165,6 @@ def actualizar_movimiento(
 # ---------------------------------------------------------
 #  ELIMINAR (LÓGICO) MOVIMIENTO
 # ---------------------------------------------------------
-
 def eliminar_movimiento_logico(usuario_id: str, movimiento_id: int) -> bool:
     try:
         supabase = get_supabase_client()
@@ -188,6 +177,8 @@ def eliminar_movimiento_logico(usuario_id: str, movimiento_id: int) -> bool:
             .execute()
         )
 
+        # Invalidar cache tras eliminación lógica
+        st.cache_data.clear()
         return result.data is not None
 
     except Exception as e:
@@ -198,7 +189,6 @@ def eliminar_movimiento_logico(usuario_id: str, movimiento_id: int) -> bool:
 # ---------------------------------------------------------
 #  RESTAURAR MOVIMIENTO
 # ---------------------------------------------------------
-
 def restaurar_movimiento(usuario_id: str, movimiento_id: int) -> bool:
     try:
         supabase = get_supabase_client()
@@ -211,6 +201,8 @@ def restaurar_movimiento(usuario_id: str, movimiento_id: int) -> bool:
             .execute()
         )
 
+        # Invalidar cache tras restaurar
+        st.cache_data.clear()
         return result.data is not None
 
     except Exception as e:

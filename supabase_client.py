@@ -1,4 +1,5 @@
 import os
+import streamlit as st
 from supabase import create_client, Client
 
 # ---------------------------------------------------------
@@ -13,25 +14,19 @@ if not SUPABASE_URL or not SUPABASE_ANON_KEY:
         "Faltan SUPABASE_URL o SUPABASE_ANON_KEY en las variables de entorno."
     )
 
-# Cliente global reutilizable
-_supabase_client: Client | None = None
-
-
 # ---------------------------------------------------------
-#  OBTENER CLIENTE SUPABASE (SINGLETON)
+#  OBTENER CLIENTE SUPABASE (CACHEADO POR STREAMLIT)
 # ---------------------------------------------------------
-
+# Usamos st.cache_resource para reutilizar el cliente entre reruns
+# y evitar recrearlo en cada interacción.
+@st.cache_resource(ttl=None)
 def get_supabase_client() -> Client:
     """
-    Devuelve una instancia única del cliente de Supabase.
+    Devuelve una instancia cacheada del cliente de Supabase.
     Si falla la creación, lanza un error claro.
     """
-    global _supabase_client
-
-    if _supabase_client is None:
-        try:
-            _supabase_client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
-        except Exception as e:
-            raise RuntimeError(f"Error al inicializar Supabase: {e}")
-
-    return _supabase_client
+    try:
+        client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+    except Exception as e:
+        raise RuntimeError(f"Error al inicializar Supabase: {e}")
+    return client
