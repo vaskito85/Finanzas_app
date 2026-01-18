@@ -1,6 +1,5 @@
 import streamlit as st
 import json
-import pandas as pd
 
 from auth import check_auth
 from ui import topbar
@@ -17,6 +16,13 @@ from models import listar_movimientos
 from etiquetas_inteligentes import entrenar_modelo, predecir_etiquetas
 
 
+def formato_monto_a_str(m):
+    try:
+        return f"{float(m):.2f}"
+    except Exception:
+        return ""
+
+
 def main():
     check_auth()
     topbar()
@@ -28,7 +34,11 @@ def main():
     usuario_id = st.session_state["user"]["id"]
 
     st.markdown("## ✏️ Editar Movimiento")
+    st.markdown("Seleccioná un movimiento y editá sus campos. Guardá para aplicar los cambios.")
 
+    st.markdown("---")
+
+    # Obtener movimientos directos desde la DB (no cacheado aquí para permitir edición inmediata)
     movimientos = obtener_movimientos(usuario_id)
 
     if not movimientos:
@@ -43,107 +53,84 @@ def main():
         st.error("No se encontró el movimiento seleccionado.")
         return
 
-    categorias = obtener_categorias(usuario_id)
-    etiquetas_base = obtener_etiquetas(usuario_id)
-    cuentas = obtener_cuentas(usuario_id)
-
-    # ENTRENAR MODELO
-    mov_prev = listar_movimientos(usuario_id)
-    modelo = entrenar_modelo([
-        {"descripcion": m.descripcion, "etiquetas": m.etiquetas}
-        for m in mov_prev
-    ])
-
-    # Etiquetas existentes
-    etiquetas_existentes = mov.get("etiquetas") or []
-    if isinstance(etiquetas_existentes, str):
-        try:
-            etiquetas_existentes = json.loads(etiquetas_existentes)
-        except:
-            etiquetas_existentes = []
-
-    # Fecha
+    # Cargar catálogos
     try:
-        fecha_valor = pd.to_datetime(mov.get("fecha")).date()
-    except:
-        fecha_valor = None
+        categorias = obtener_categorias(usuario_id)
+    except Exception:
+        categorias = []
 
-    with st.form("form_editar"):
-        col1, col2 = st.columns(2)
+    try:
+        cuentas = obtener_cuentas(usuario_id)
+    except Exception:
+        cuentas = []
 
+    try:
+        etiquetas_base = obtener_etiquetas(usuario_id)
+    except Exception:
+        etiquetas_base = []
+
+    # Preparar valores iniciales
+    fecha_init = mov.get("fecha") or ""
+    categoria_init = mov.get("categoria") or "Sin categoría"
+    tipo_init = (mov.get("tipo") or "").lower()
+    descripcion_init = mov.get("descripcion") or ""
+    monto_init = formato_monto_a_str(mov.get("monto") or 0)
+    cuenta_init = mov.get("cuenta") or "Sin cuenta"
+    etiquetas_raw = mov.get("etiquetas") or []
+    if isinstance(etiquetas_raw, list):
+        etiquetas_init = ", ".join([str(e) for e in etiquetas_raw])
+    else:
+        etiquetas_init = str(etiquetas_raw)
+
+    with st.form("form_editar", clear_on_submit=False):
+        col1, col2, col3 = st.columns(3)
         with col1:
-            fecha = st.date_input("📅 Fecha", value=fecha_valor)
-            tipo = st.selectbox("📌 Tipo", ["ingreso", "gasto"], index=0 if mov.get("tipo") == "ingreso" else 1)
-            descripcion = st.text_input("📝 Descripción", value=mov.get("descripcion") or "")
-
-            # IA: sugerencias automáticas
-            etiquetas_ai = []
-            if descripcion.strip():
-                etiquetas_ai = predecir_etiquetas(modelo, descripcion)
-
+            fecha = st.text_input("📅 Fecha (YYYY-MM-DD)", value=str(fecha_init))
+            tipo = st.selectbox("🔁 Tipo", ["ingreso", "gasto"], index=0 if tipo_init == "ingreso" else 1)
         with col2:
-            categoria_actual = mov.get("categoria") or ""
-            categoria_sel = st.selectbox("📂 Categoría", categorias + ["Otra..."],
-                                         index=(categorias.index(categoria_actual) if categoria_actual in categorias else len(categorias)))
-            categoria_nueva = ""
-            if categoria_sel == "Otra...":
-                categoria_nueva = st.text_input("➕ Nueva categoría")
-            categoria_final = categoria_nueva.strip() if categoria_nueva else categoria_sel
+            categoria = st.selectbox("📂 Categoría", options=["Sin categoría"] + categorias, index=(0 if categoria_init == "Sin categoría" else (categorias.index(categoria_init)+1) if categoria_init in categorias else 0))
+            cuenta = st.selectbox("🏦 Cuenta", options=["Sin cuenta"] + cuentas, index=(0 if cuenta_init == "Sin cuenta" else (cuentas.index(cuenta_init)+1) if cuenta_init in cuentas else 0))
+        with col3:
+            monto_input = st.text_input("💵 Monto", value=monto_init)
+            etiquetas_input = st.text_input("🏷 Etiquetas (separadas por comas)", value=etiquetas_init)
 
-            cuenta_actual = mov.get("cuenta") or ""
-            cuenta_sel = st.selectbox("🏦 Cuenta", cuentas + ["Otra..."],
-                                      index=(cuentas.index(cuenta_actual) if cuenta_actual in cuentas else len(cuentas)))
-            cuenta_nueva = ""
-            if cuenta_sel == "Otra...":
-                cuenta_nueva = st.text_input("➕ Nueva cuenta")
-            cuenta_final = cuenta_nueva.strip() if cuenta_nueva else cuenta_sel
-
-        st.markdown("### 🏷 Etiquetas")
-
-        etiquetas_multi = st.multiselect(
-            "Etiquetas sugeridas por IA",
-            options=list(set(etiquetas_ai + etiquetas_base)),
-            default=list(set(etiquetas_existentes + etiquetas_ai))
-        )
-
-        etiquetas_extra = st.text_input(
-            "Etiquetas adicionales (separadas por ;)",
-            value="; ".join([e for e in etiquetas_existentes if e not in etiquetas_base]),
-        )
+        descripcion = st.text_area("📝 Descripción", value=descripcion_init, max_chars=500)
 
         submitted = st.form_submit_button("💾 Guardar cambios", use_container_width=True)
 
     if submitted:
-        if categoria_nueva.strip():
-            agregar_categoria(usuario_id, categoria_nueva)
+        # Validaciones y preparación
+        try:
+            monto = float(monto_input.replace(".", "").replace(",", ".")) if isinstance(monto_input, str) else float(monto_input)
+        except Exception:
+            st.error("Monto inválido. Usá formato numérico, p. ej. 1250.50 o 1.250,50")
+            st.stop()
 
-        if cuenta_nueva.strip():
-            agregar_cuenta(usuario_id, cuenta_nueva)
-
-        etiquetas_list = list(etiquetas_multi)
-
-        if etiquetas_extra.strip():
-            extras = [e.strip() for e in etiquetas_extra.split(";") if e.strip()]
-            for e in extras:
-                etiquetas_list.append(e)
-                agregar_etiqueta(usuario_id, e)
-
-        etiquetas_json = json.dumps(etiquetas_list, ensure_ascii=False)
+        etiquetas = []
+        if isinstance(etiquetas_input, str) and etiquetas_input.strip():
+            etiquetas = [e.strip() for e in etiquetas_input.split(",") if e.strip()]
 
         ok = actualizar_movimiento(
             usuario_id=usuario_id,
             movimiento_id=id_sel,
             fecha=str(fecha),
-            categoria=categoria_final,
-            tipo=tipo,
-            descripcion=descripcion,
-            monto=float(mov.get("monto") or 0),
-            cuenta=cuenta_final,
-            etiquetas_json=etiquetas_json,
+            categoria=categoria or "Sin categoría",
+            tipo=tipo.lower(),
+            descripcion=descripcion or "",
+            monto=float(monto),
+            cuenta=cuenta or "Sin cuenta",
+            etiquetas_json=json.dumps(etiquetas, ensure_ascii=False),
         )
 
         if ok:
-            st.success("Movimiento actualizado correctamente.")
-            st.rerun()
+            st.success("✅ Movimiento actualizado correctamente.")
+            st.experimental_rerun()
         else:
-            st.error("Error al actualizar el movimiento.")
+            st.error("❌ Error al actualizar el movimiento. Revisá los logs del servidor.")
+
+    st.markdown("---")
+    st.info("Si necesitás cambiar muchas filas, usá la importación por CSV y luego edita puntos puntuales aquí.")
+
+
+if __name__ == "__main__":
+    main()

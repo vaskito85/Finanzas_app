@@ -1,5 +1,6 @@
 import streamlit as st
 import json
+import datetime
 
 from auth import check_auth
 from ui import topbar
@@ -16,6 +17,23 @@ from models import listar_movimientos
 from etiquetas_inteligentes import entrenar_modelo, predecir_etiquetas
 
 
+def formato_argentino_a_float(valor):
+    if valor is None:
+        return None
+    if isinstance(valor, (int, float)):
+        return float(valor)
+    if isinstance(valor, str):
+        valor = valor.strip()
+        if valor == "":
+            return None
+        # Soporta formato argentino: "1.234,56"
+        valor = valor.replace(".", "").replace(",", ".")
+    try:
+        return float(valor)
+    except Exception:
+        return None
+
+
 def main():
     check_auth()
     topbar()
@@ -26,91 +44,78 @@ def main():
 
     usuario_id = st.session_state["user"]["id"]
 
-    st.markdown("## ➕ Cargar Movimiento")
+    st.markdown("## ➕ Cargar movimiento")
+    st.markdown("Completá los datos y presioná Guardar para agregar un movimiento.")
 
-    # ENTRENAR MODELO DE ETIQUETAS
-    movimientos_previos = listar_movimientos(usuario_id)
-    modelo = entrenar_modelo([
-        {"descripcion": m.descripcion, "etiquetas": m.etiquetas}
-        for m in movimientos_previos
-    ])
+    st.markdown("---")
 
-    categorias = obtener_categorias(usuario_id)
-    etiquetas_base = obtener_etiquetas(usuario_id)
-    cuentas = obtener_cuentas(usuario_id)
+    # Cargar catálogos
+    try:
+        categorias = obtener_categorias(usuario_id)
+    except Exception:
+        categorias = []
 
-    with st.form("form_movimiento"):
-        fecha = st.date_input("📅 Fecha")
+    try:
+        cuentas = obtener_cuentas(usuario_id)
+    except Exception:
+        cuentas = []
 
-        col1, col2 = st.columns(2)
+    try:
+        etiquetas_base = obtener_etiquetas(usuario_id)
+    except Exception:
+        etiquetas_base = []
+
+    with st.form("form_cargar", clear_on_submit=False):
+        col1, col2, col3 = st.columns(3)
 
         with col1:
-            tipo = st.selectbox("📌 Tipo", ["ingreso", "gasto"])
-            descripcion = st.text_input("📝 Descripción")
-
-            # IA: sugerencias automáticas
-            etiquetas_ai = []
-            if descripcion.strip():
-                etiquetas_ai = predecir_etiquetas(modelo, descripcion)
-
+            fecha = st.date_input("📅 Fecha", value=datetime.date.today())
+            tipo = st.selectbox("🔁 Tipo", ["ingreso", "gasto"])
         with col2:
-            categoria_sel = st.selectbox("📂 Categoría", categorias + ["Otra..."])
-            categoria_nueva = ""
-            if categoria_sel == "Otra...":
-                categoria_nueva = st.text_input("➕ Nueva categoría")
-            categoria_final = categoria_nueva.strip() if categoria_nueva else categoria_sel
+            categoria = st.selectbox("📂 Categoría", options=["Sin categoría"] + categorias)
+            cuenta = st.selectbox("🏦 Cuenta", options=["Sin cuenta"] + cuentas)
+        with col3:
+            monto_input = st.text_input("💵 Monto", value="")
+            etiquetas_input = st.text_input(
+                "🏷 Etiquetas (separadas por comas)", value=""
+            )
 
-            cuenta_sel = st.selectbox("🏦 Cuenta", cuentas + ["Otra..."])
-            cuenta_nueva = ""
-            if cuenta_sel == "Otra...":
-                cuenta_nueva = st.text_input("➕ Nueva cuenta")
-            cuenta_final = cuenta_nueva.strip() if cuenta_nueva else cuenta_sel
-
-        st.markdown("### 🏷 Etiquetas")
-
-        etiquetas_multi = st.multiselect(
-            "Etiquetas sugeridas por IA",
-            options=list(set(etiquetas_ai + etiquetas_base)),
-            default=etiquetas_ai
-        )
-
-        etiquetas_extra = st.text_input(
-            "Etiquetas adicionales (separadas por ;)",
-            help="Ejemplo: urgente; tarjeta; online",
-        )
+        descripcion = st.text_area("📝 Descripción", value="", max_chars=500)
 
         submitted = st.form_submit_button("💾 Guardar movimiento", use_container_width=True)
 
     if submitted:
-        if categoria_nueva.strip():
-            agregar_categoria(usuario_id, categoria_nueva)
+        # Validaciones simples
+        monto = formato_argentino_a_float(monto_input)
+        if monto is None:
+            st.error("El monto no es válido. Usá números, p. ej. 1250.50 o 1.250,50")
+            st.stop()
 
-        if cuenta_nueva.strip():
-            agregar_cuenta(usuario_id, cuenta_nueva)
+        etiquetas = []
+        if isinstance(etiquetas_input, str) and etiquetas_input.strip():
+            etiquetas = [e.strip() for e in etiquetas_input.split(",") if e.strip()]
 
-        etiquetas_list = list(etiquetas_multi)
-
-        if etiquetas_extra.strip():
-            extras = [e.strip() for e in etiquetas_extra.split(";") if e.strip()]
-            for e in extras:
-                etiquetas_list.append(e)
-                agregar_etiqueta(usuario_id, e)
-
-        etiquetas_json = json.dumps(etiquetas_list, ensure_ascii=False)
-
-        ok = insertar_movimiento(
+        success = insertar_movimiento(
             usuario_id=usuario_id,
             fecha=str(fecha),
-            categoria=categoria_final,
-            tipo=tipo,
-            descripcion=descripcion,
-            monto=float(st.session_state.get("monto", 0)),
-            cuenta=cuenta_final,
-            etiquetas_json=etiquetas_json,
+            categoria=categoria or "Sin categoría",
+            tipo=tipo.lower(),
+            descripcion=descripcion or "",
+            monto=float(monto),
+            cuenta=cuenta or "Sin cuenta",
+            etiquetas_json=json.dumps(etiquetas, ensure_ascii=False),
         )
 
-        if ok:
-            st.success("Movimiento guardado correctamente.")
-            st.rerun()
+        if success:
+            st.success("✅ Movimiento guardado correctamente.")
+            # Forzar recarga y mostrar cambios
+            st.experimental_rerun()
         else:
-            st.error("Error al guardar el movimiento.")
+            st.error("❌ Error al guardar el movimiento. Revisá los logs del servidor.")
+
+    st.markdown("---")
+    st.info("También podés cargar movimientos en lote desde la opción 'Importar CSV' en el menú.")
+
+
+if __name__ == "__main__":
+    main()
