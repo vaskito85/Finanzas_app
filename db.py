@@ -24,21 +24,28 @@ def insertar_movimiento(
     try:
         supabase = get_supabase_client()
 
-        payload = {
+        try:
+            etiquetas = json.loads(etiquetas_json) if etiquetas_json else []
+            if not isinstance(etiquetas, list):
+                etiquetas = []
+        except Exception:
+            etiquetas = []
+
+        data = {
             "usuario_id": usuario_id,
             "fecha": fecha,
-            "categoria": categoria,
+            "categoria": categoria or "Sin categoría",
             "tipo": tipo,
-            "descripcion": descripcion,
-            "monto": monto,
-            "cuenta": cuenta,
-            "etiquetas": etiquetas_json or "[]",
+            "descripcion": descripcion or "",
+            "monto": float(monto) if monto is not None else 0.0,
+            "cuenta": cuenta or "Sin cuenta",
+            "etiquetas": etiquetas,
             "deleted": False,
         }
 
-        result = supabase.table("movimientos").insert(payload).execute()
+        result = supabase.table("movimientos").insert(data).execute()
 
-        # Si la inserción fue exitosa, invalidamos cache de movimientos
+        # Invalidar cache tras inserción
         st.cache_data.clear()
         return result.data is not None
 
@@ -48,7 +55,7 @@ def insertar_movimiento(
 
 
 # ---------------------------------------------------------
-#  OBTENER MOVIMIENTOS (ACTIVOS)
+#  OBTENER MOVIMIENTOS (ACTIVOS) - legacy (trae todo)
 # ---------------------------------------------------------
 def obtener_movimientos(usuario_id: str) -> List[Dict[str, Any]]:
     try:
@@ -69,6 +76,63 @@ def obtener_movimientos(usuario_id: str) -> List[Dict[str, Any]]:
     except Exception as e:
         print(f"[DB] Error al obtener movimientos: {e}")
         return []
+
+
+# ---------------------------------------------------------
+#  OBTENER MOVIMIENTOS PAGINADOS (server-side)
+# ---------------------------------------------------------
+def obtener_movimientos_paginados(
+    usuario_id: str,
+    limit: int = 50,
+    offset: int = 0,
+    fecha_desde: Optional[str] = None,
+    fecha_hasta: Optional[str] = None,
+    cuenta: Optional[str] = None,
+    categoria: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Devuelve un dict con:
+      - data: lista de filas (dicts)
+      - count: número total de filas que coinciden con los filtros (int)
+
+    Usa select(..., count="exact") para obtener el total (si el proveedor lo soporta).
+    La paginación se aplica con .range(start, end) (supabase python client).
+    """
+    try:
+        supabase = get_supabase_client()
+
+        query = supabase.table("movimientos").select("*", count="exact").eq("usuario_id", usuario_id).eq("deleted", False)
+
+        if fecha_desde:
+            # Supabase/Postgres:>= fecha_desde
+            query = query.gte("fecha", fecha_desde)
+        if fecha_hasta:
+            query = query.lte("fecha", fecha_hasta)
+        if cuenta and cuenta != "Todas":
+            query = query.eq("cuenta", cuenta)
+        if categoria and categoria != "Todas":
+            query = query.eq("categoria", categoria)
+
+        # Order consistent: fecha desc, id desc
+        query = query.order("fecha", desc=True).order("id", desc=True)
+
+        start = int(offset)
+        end = int(offset + limit - 1)
+        result = query.range(start, end).execute()
+
+        rows = result.data or []
+        total = getattr(result, "count", None)
+        # Si count no está disponible, intentar inferir (menos preciso)
+        if total is None:
+            # Si estamos en la primera página y rows < limit, asumimos total = len(rows)
+            # No es perfecto pero evita None
+            total = len(rows) if offset == 0 else None
+
+        return {"data": rows, "count": total or 0}
+
+    except Exception as e:
+        print(f"[DB] Error al obtener movimientos paginados: {e}")
+        return {"data": [], "count": 0}
 
 
 # ---------------------------------------------------------
@@ -135,19 +199,26 @@ def actualizar_movimiento(
     try:
         supabase = get_supabase_client()
 
-        payload = {
+        try:
+            etiquetas = json.loads(etiquetas_json) if etiquetas_json else []
+            if not isinstance(etiquetas, list):
+                etiquetas = []
+        except Exception:
+            etiquetas = []
+
+        data = {
             "fecha": fecha,
-            "categoria": categoria,
+            "categoria": categoria or "Sin categoría",
             "tipo": tipo,
-            "descripcion": descripcion,
-            "monto": monto,
-            "cuenta": cuenta,
-            "etiquetas": etiquetas_json or "[]",
+            "descripcion": descripcion or "",
+            "monto": float(monto) if monto is not None else 0.0,
+            "cuenta": cuenta or "Sin cuenta",
+            "etiquetas": etiquetas,
         }
 
         result = (
             supabase.table("movimientos")
-            .update(payload)
+            .update(data)
             .eq("id", movimiento_id)
             .eq("usuario_id", usuario_id)
             .execute()
